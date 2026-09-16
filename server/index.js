@@ -75,6 +75,28 @@ async function seedInitialData() {
   }
 }
 
+let dbInitPromise = null;
+async function ensureDb() {
+  if (!dbInitPromise) {
+    dbInitPromise = (async () => {
+      await initDb();
+      await seedInitialData();
+    })();
+  }
+  await dbInitPromise;
+}
+
+// Middleware to ensure DB tables exist on every request
+app.use(async (req, res, next) => {
+  try {
+    await ensureDb();
+    next();
+  } catch (err) {
+    console.error('DB Initialization Middleware Error:', err);
+    next();
+  }
+});
+
 // Health Check / Test DB
 app.get('/api/health', async (req, res) => {
   try {
@@ -85,8 +107,6 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Initialize database & seed on startup
-initDb().then(seedInitialData).catch(console.error);
 
 // ================= SHOP =================
 app.get('/api/shop', async (req, res) => {
