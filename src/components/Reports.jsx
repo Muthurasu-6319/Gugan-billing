@@ -143,7 +143,7 @@ export const Reports = () => {
       }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📊 Sales &amp; Gross Profit Reports (வியாபார அறிக்கைகள்)</span>
+            <span>Sales &amp; Gross Profit Reports</span>
             <span className="badge badge-primary">Admin Exclusive</span>
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
@@ -198,7 +198,7 @@ export const Reports = () => {
         </div>
 
         <div className="card" style={{ padding: '1.15rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803d' }}>GROSS PROFIT (லாபம்)</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803d' }}>GROSS PROFIT</span>
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#166534', marginTop: '0.25rem' }}>
             {formatCurrency(grossProfit)}
           </div>
@@ -238,7 +238,7 @@ export const Reports = () => {
                 <div key={cat.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600, marginBottom: '2px' }}>
                     <span>
-                      {cat.icon} {cat.name}
+                      {cat.name}
                     </span>
                     <span>
                       {formatCurrency(amount)} ({percent.toFixed(1)}%)
@@ -273,7 +273,7 @@ export const Reports = () => {
             {/* Cash */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>💵 Cash In Hand</div>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>Cash In Hand</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Physical notes received</div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -287,7 +287,7 @@ export const Reports = () => {
             {/* UPI */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>📱 UPI / QR Payments</div>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>UPI / QR Payments</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>GooglePay, PhonePe, Paytm</div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -301,7 +301,7 @@ export const Reports = () => {
             {/* Card */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>💳 Credit / Debit Card</div>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>Credit / Debit Card</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>POS machine swipe</div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -315,7 +315,7 @@ export const Reports = () => {
             {/* Credit / Balance */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>📒 Credit / Due Sale</div>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>Credit / Due Sale</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Pay later customers</div>
               </div>
               <div style={{ textAlign: 'right' }}>

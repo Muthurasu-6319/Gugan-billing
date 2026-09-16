@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  Flame,
-  UserCheck,
   Shield,
+  UserCheck,
   Clock,
-  Printer,
-  PlusCircle,
+  Sparkles,
   FileText,
-  RotateCcw,
-  Sparkles
+  Menu
 } from 'lucide-react';
 import { formatDate } from '../utils/formatters';
 
 export const Navbar = () => {
-  const { currentUser, switchRole, shop, setActiveTab, resetData } = useApp();
+  const {
+    currentUser,
+    switchRole,
+    shop,
+    activeTab,
+    setActiveTab,
+    toggleMobileMenu
+  } = useApp();
+
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -29,101 +34,89 @@ export const Navbar = () => {
     hour12: true
   });
 
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'dashboard': return 'Dashboard Overview';
+      case 'billing': return 'Quick Billing';
+      case 'products': return 'Products Inventory';
+      case 'pricelist': return 'Cracker Price List';
+      case 'stock': return 'Stock & Inventory Alerts';
+      case 'customers': return 'Customer Directory';
+      case 'sales': return 'Sales Bill History';
+      case 'purchases': return 'Stock Inward Receipts';
+      case 'suppliers': return 'Suppliers Directory';
+      case 'reports': return 'Financial Reports & Analytics';
+      case 'settings': return 'System & Shop Settings';
+      default: return 'Gugan Billing';
+    }
+  };
+
   return (
-    <header className="no-print" style={{
+    <header className="no-print navbar-container" style={{
       background: '#ffffff',
       borderBottom: '1px solid var(--border-color)',
-      padding: '0.75rem 1.5rem',
+      padding: '0.85rem 1.5rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       position: 'sticky',
       top: 0,
       zIndex: 40,
-      boxShadow: 'var(--shadow-xs)'
+      gap: '0.75rem'
     }}>
-      {/* Brand Identity */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-        <div style={{
-          width: '44px',
-          height: '44px',
-          borderRadius: '10px',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#ffffff',
-          border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-xs)'
-        }}>
-          {shop.logo ? (
-            <img
-              src={shop.logo}
-              alt={shop.name}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          ) : (
-            <span style={{ fontSize: '1.4rem' }}>🧨</span>
-          )}
-        </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
-              {shop.name || 'Shri Gugan Crackers'}
-            </h1>
-            <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
-              {shop.city || 'Sivakasi'}
-            </span>
-          </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>
-            {shop.tamilName} • {shop.mobile}
+      {/* Left: Mobile Toggle + Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+        <button
+          onClick={toggleMobileMenu}
+          className="mobile-menu-toggle btn btn-secondary btn-sm"
+          style={{ padding: '0.35rem 0.45rem', borderRadius: '8px', flexShrink: 0 }}
+          title="Open Menu"
+        >
+          <Menu size={18} color="var(--primary)" />
+        </button>
+
+        <div style={{ overflow: 'hidden' }}>
+          <h1 className="navbar-title" style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {getPageTitle()}
+          </h1>
+          <p className="navbar-subtitle" style={{ fontSize: '0.725rem', color: 'var(--text-muted)', margin: '1px 0 0', fontWeight: 500, whiteSpace: 'nowrap' }}>
+            {shop.name} • {shop.city || 'Sivakasi'}
           </p>
         </div>
       </div>
 
-      {/* Center Shortcuts & Quick Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+      {/* Right Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
         <button
           onClick={() => setActiveTab('billing')}
           className="btn btn-primary btn-sm"
-          style={{ gap: '0.4rem', fontWeight: 700 }}
+          style={{ gap: '0.35rem', fontWeight: 700, padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
           title="F2: Open Quick Billing"
         >
-          <Sparkles size={15} />
-          <span> Billing</span>
-          <span className="kbd" style={{ background: 'rgba(255,255,255,0.25)', color: '#ffffff', borderColor: 'rgba(255,255,255,0.4)' }}>F2</span>
+          <Sparkles size={14} />
+          <span className="navbar-btn-text">New Bill</span>
         </button>
 
         <button
           onClick={() => setActiveTab('pricelist')}
-          className="btn btn-secondary btn-sm"
-          style={{ gap: '0.4rem' }}
-          title="View Crackers Price List"
+          className="btn btn-secondary btn-sm navbar-btn-text"
+          style={{ gap: '0.35rem', padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
         >
-          <FileText size={15} color="var(--primary)" />
+          <FileText size={14} color="var(--primary)" />
           <span>Price List</span>
         </button>
-      </div>
 
-      {/* Right Controls: Clock, Role Switcher */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* Real-time Clock */}
-        <div style={{
+        <div className="navbar-clock" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '0.4rem',
-          padding: '0.35rem 0.75rem',
-          background: '#f8fafc',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-color)',
-          fontSize: '0.8rem',
-          color: 'var(--text-secondary)',
+          fontSize: '0.78rem',
+          color: 'var(--text-muted)',
           fontWeight: 600
         }}>
           <Clock size={14} color="var(--primary)" />
-          <span>{formatDate(currentTime.toISOString())}</span>
-          <span style={{ color: 'var(--text-light)' }}>|</span>
-          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>{timeString}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)', fontWeight: 700 }}>{timeString}</span>
         </div>
 
         {/* Role Switcher Pill */}
@@ -140,9 +133,9 @@ export const Navbar = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.25rem 0.65rem',
-              fontSize: '0.75rem',
+              gap: '0.2rem',
+              padding: '0.15rem 0.45rem',
+              fontSize: '0.7rem',
               fontWeight: 700,
               borderRadius: 'var(--radius-full)',
               border: 'none',
@@ -153,7 +146,7 @@ export const Navbar = () => {
               transition: 'all 0.15s ease'
             }}
           >
-            <Shield size={13} />
+            <Shield size={11} />
             <span>Admin</span>
           </button>
           <button
@@ -161,9 +154,9 @@ export const Navbar = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.25rem 0.65rem',
-              fontSize: '0.75rem',
+              gap: '0.2rem',
+              padding: '0.15rem 0.45rem',
+              fontSize: '0.7rem',
               fontWeight: 700,
               borderRadius: 'var(--radius-full)',
               border: 'none',
@@ -174,8 +167,8 @@ export const Navbar = () => {
               transition: 'all 0.15s ease'
             }}
           >
-            <UserCheck size={13} />
-            <span>Staff / Cashier</span>
+            <UserCheck size={11} />
+            <span>Staff</span>
           </button>
         </div>
       </div>

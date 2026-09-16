@@ -35,7 +35,7 @@ export const SalesHistory = () => {
       }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📜 Sales History &amp; Receipts (விற்பனை வரலாறு)</span>
+            <span>Sales History &amp; Receipts</span>
             <span className="badge badge-primary">{filteredSales.length} Invoices</span>
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
@@ -136,15 +136,32 @@ export const SalesHistory = () => {
                         )}
                       </div>
                     </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span className="badge badge-blue">{sale.paymentMethod}</span>
-                    </td>
-                    <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
-                      {formatCurrency(sale.subtotal)}
-                    </td>
-                    <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: 600 }}>
-                      {sale.discountTotal > 0 ? `-${formatCurrency(sale.discountTotal)}` : '-'}
-                    </td>
+                    {(() => {
+                      const mode = sale.paymentMethod || sale.paymentMode || 'Cash';
+                      const sub = Number(sale.subTotal) || Number(sale.subtotal) || Number(sale.grandTotal) || 0;
+                      const disc = Number(sale.discountTotal) > 0
+                        ? Number(sale.discountTotal)
+                        : (sale.items ? sale.items.reduce((sum, i) => {
+                            const rate = Number(i.rate || i.sellingPrice || i.mrp || 0);
+                            const d = Number(i.discount || 0);
+                            const qty = Number(i.qty || 1);
+                            return sum + (qty * rate * (d / 100));
+                          }, 0) : 0);
+
+                      return (
+                        <>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className="badge badge-blue">{mode}</span>
+                          </td>
+                          <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
+                            {formatCurrency(sub)}
+                          </td>
+                          <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: 600 }}>
+                            {disc > 0 ? `-${formatCurrency(disc)}` : '-'}
+                          </td>
+                        </>
+                      );
+                    })()}
                     <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--primary)', fontSize: '0.95rem' }}>
                       {formatCurrency(sale.grandTotal)}
                     </td>

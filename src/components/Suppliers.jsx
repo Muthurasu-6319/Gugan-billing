@@ -58,7 +58,7 @@ export const Suppliers = () => {
       }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>🏭 Fireworks Suppliers &amp; Agencies (சப்ளையர்)</span>
+            <span>Fireworks Suppliers &amp; Agencies</span>
             <span className="badge badge-primary">{suppliers.length} Registered</span>
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
@@ -68,7 +68,7 @@ export const Suppliers = () => {
 
         <button onClick={handleOpenAdd} className="btn btn-primary" style={{ gap: '0.5rem', fontWeight: 700 }}>
           <Plus size={18} />
-          <span>Add Supplier (புதிய சப்ளையர்)</span>
+          <span>Add Supplier</span>
         </button>
       </div>
 
@@ -92,8 +92,8 @@ export const Suppliers = () => {
         {filtered.length === 0 ? (
           <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
             <Building2 size={36} color="#cbd5e1" style={{ margin: '0 auto 0.5rem' }} />
-            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>இன்னும் சப்ளையர்கள் சேர்க்கப்படவில்லை (No Suppliers Yet)</div>
-            <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>மேலேயுள்ள "Add Supplier" பட்டனை கிளிக் செய்து உங்கள் பட்டாசு சப்ளையர்களை சேர்க்கவும்.</div>
+            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>No Suppliers Yet</div>
+            <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>Click the "Add Supplier" button above to add fireworks suppliers.</div>
           </div>
         ) : (
           filtered.map((sup) => {

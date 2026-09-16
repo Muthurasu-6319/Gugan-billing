@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import {
   Printer,
   X,
+  User,
   FileSpreadsheet,
   Receipt,
   Sparkles,
@@ -21,10 +22,18 @@ export const InvoicePrintModal = () => {
   const [printFormat, setPrintFormat] = useState('a4'); // 'a4', 'performa', 'thermal'
 
   useEffect(() => {
-    if (activeInvoiceForPrint) {
-      setPrintFormat(activeInvoiceForPrint.billFormat || 'a4');
-    }
+    setPrintFormat('a4');
   }, [activeInvoiceForPrint]);
+
+  // Trigger browser print dialog when opened via Save & Print or Print click
+  useEffect(() => {
+    if (isPrintModalOpen && activeInvoiceForPrint && activeInvoiceForPrint.autoPrint) {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isPrintModalOpen, activeInvoiceForPrint]);
 
   if (!isPrintModalOpen || !activeInvoiceForPrint) return null;
 
@@ -81,8 +90,8 @@ export const InvoicePrintModal = () => {
   const emptyRowsA4 = Array.from({ length: emptyRowsCountA4 });
 
   // UPI payment payload for QR Code
-  const upiId = shop.upiId || 'gugancrackers@upi';
-  const upiPayLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(shop.name || 'Shri Gugan Crackers')}&am=${netAmount}&cu=INR&tn=${encodeURIComponent(`Invoice ${inv.invoiceNo}`)}`;
+  const upiId = shop.upiId || 'fireworks@upi';
+  const upiPayLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(shop.name || 'Sri Gugan Crackers')}&am=${netAmount}&cu=INR&tn=${encodeURIComponent(`Invoice ${inv.invoiceNo}`)}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=1&data=${encodeURIComponent(upiPayLink)}`;
 
   // Shop details with safe fallbacks
@@ -93,7 +102,7 @@ export const InvoicePrintModal = () => {
   const shopPincode = shop.pincode || '626123';
   const shopPhone = shop.mobile || '94431 23456';
   const shopAltPhone = shop.altMobile || '98421 23456';
-  const shopEmail = shop.email || 'guganfireworks@gmail.com';
+  const shopEmail = shop.email || 'billing@fireworks.com';
   const shopGstin = shop.gstin || '33AAAAA0000A1Z5';
 
   return (
@@ -106,61 +115,7 @@ export const InvoicePrintModal = () => {
             <span>Bill Print Preview #{inv.invoiceNo}</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-            {/* Format Toggle Buttons */}
-            <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: 'var(--radius-md)' }}>
-              <button
-                onClick={() => setPrintFormat('a4')}
-                className="btn btn-sm"
-                style={{
-                  background: printFormat === 'a4' ? '#ffffff' : 'transparent',
-                  color: printFormat === 'a4' ? 'var(--primary)' : 'var(--text-muted)',
-                  border: 'none',
-                  boxShadow: printFormat === 'a4' ? 'var(--shadow-xs)' : 'none',
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  gap: '0.35rem'
-                }}
-              >
-                <Sparkles size={14} />
-                <span>Executive A4 (முழு பில்)</span>
-              </button>
-
-              <button
-                onClick={() => setPrintFormat('performa')}
-                className="btn btn-sm"
-                style={{
-                  background: printFormat === 'performa' ? '#ffffff' : 'transparent',
-                  color: printFormat === 'performa' ? 'var(--accent-blue)' : 'var(--text-muted)',
-                  border: 'none',
-                  boxShadow: printFormat === 'performa' ? 'var(--shadow-xs)' : 'none',
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  gap: '0.35rem'
-                }}
-              >
-                <FileSpreadsheet size={14} />
-                <span>Wholesale Performa (மொத்த விற்பனை)</span>
-              </button>
-
-              <button
-                onClick={() => setPrintFormat('thermal')}
-                className="btn btn-sm"
-                style={{
-                  background: printFormat === 'thermal' ? '#ffffff' : 'transparent',
-                  color: printFormat === 'thermal' ? '#059669' : 'var(--text-muted)',
-                  border: 'none',
-                  boxShadow: printFormat === 'thermal' ? 'var(--shadow-xs)' : 'none',
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                  gap: '0.35rem'
-                }}
-              >
-                <Receipt size={14} />
-                <span>Thermal 80mm (ரசீது)</span>
-              </button>
-            </div>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <button
               onClick={() => setIsPrintModalOpen(false)}
               className="btn btn-secondary btn-sm"
@@ -175,7 +130,7 @@ export const InvoicePrintModal = () => {
         <div className="modal-body" style={{ background: '#cbd5e1', padding: '1.25rem', overflowY: 'auto' }}>
           {printFormat === 'a4' ? (
             /* ==========================================================
-               1. EXECUTIVE A4 MASTER BILL TEMPLATE (COMPLETE & LUXURIOUS)
+               1. EXECUTIVE A4 MASTER BILL TEMPLATE (MATCHING REFERENCE DESIGN)
                ========================================================== */
             <div
               id="printable-invoice"
@@ -184,490 +139,418 @@ export const InvoicePrintModal = () => {
                 maxWidth: '820px',
                 margin: '0 auto',
                 background: '#ffffff',
-                border: '2px solid #1e293b',
                 boxSizing: 'border-box',
-                fontFamily: 'Arial, Helvetica, sans-serif',
-                color: '#0f172a',
-                padding: '1.25rem 1.5rem',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                color: '#1e293b',
+                padding: '0',
                 boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.85rem'
+                position: 'relative',
+                overflow: 'hidden'
               }}
             >
-              {/* TOP HEADER: Shop Logo, Shop Name, Complete Address, Invoice Meta */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '110px 1fr 220px',
-                alignItems: 'center',
-                gap: '1rem',
-                borderBottom: '2px solid #881337',
-                paddingBottom: '0.85rem'
-              }}>
-                {/* 1. Shop Logo */}
+              {/* Decorative Header Sparkles Background */}
+              <div style={{ padding: '1.5rem 1.75rem 1rem 1.75rem' }}>
+                {/* TOP BAR: Logo + Title + Tagline & Trust Badges */}
                 <div style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: '#ffffff',
-                  padding: '4px',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '1rem'
                 }}>
-                  <img
-                    src={shop.logo || '/logo.png'}
-                    alt="Shri Gugan Crackers Logo"
-                    style={{
-                      maxHeight: '92px',
-                      maxWidth: '100px',
-                      objectFit: 'contain',
-                      display: 'block'
-                    }}
-                  />
-                </div>
-
-                {/* 2. Shop Details & Address */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <div style={{
-                    fontSize: '22px',
-                    fontWeight: '900',
-                    color: '#881337',
-                    letterSpacing: '0.04em',
-                    lineHeight: '1.1',
-                    textTransform: 'uppercase'
-                  }}>
-                    {shop.name || 'SHRI GUGAN CRACKERS'}
-                  </div>
-                  <div style={{
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                    color: '#b45309',
-                    letterSpacing: '0.02em',
-                    marginTop: '1px'
-                  }}>
-                    {shop.tamilName || 'ஸ்ரீ குகன் கிராக்கர்ஸ்'}
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: '#475569',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    {shop.tagline || 'Direct Sivakasi Fireworks • Retail & Wholesale'}
-                  </div>
-
-                  {/* Complete Shop Address */}
-                  <div style={{
-                    fontSize: '11.5px',
-                    color: '#1e293b',
-                    marginTop: '3px',
-                    lineHeight: '1.35'
-                  }}>
-                    <strong>Address:</strong> {shopAddress}, {shopCity} - {shopPincode}, {shopDistrict} Dist, {shopState}
-                  </div>
-
-                  <div style={{
-                    fontSize: '11px',
-                    color: '#1e293b',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '0.85rem'
-                  }}>
-                    <span><strong>Phone:</strong> +91 {shopPhone} {shopAltPhone ? ` / ${shopAltPhone}` : ''}</span>
-                    <span><strong>Email:</strong> {shopEmail}</span>
-                  </div>
-
-                  <div style={{
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    color: '#0f172a'
-                  }}>
-                    <span>GSTIN: <span style={{ fontFamily: 'monospace', letterSpacing: '0.04em' }}>{shopGstin}</span></span>
-                    <span style={{ marginLeft: '12px', color: '#64748b' }}>State Code: 33 (TN)</span>
-                  </div>
-                </div>
-
-                {/* 3. Invoice Badge & Key Numbers */}
-                <div style={{
-                  borderLeft: '1.5px dashed #cbd5e1',
-                  paddingLeft: '0.85rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px'
-                }}>
-                  <div style={{
-                    background: '#881337',
-                    color: '#ffffff',
-                    padding: '5px 10px',
-                    borderRadius: '4px',
-                    textAlign: 'center',
-                    fontWeight: '900',
-                    fontSize: '13px',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase'
-                  }}>
-                    {(inv.billTitle && inv.billTitle !== 'PERFORMA') ? inv.billTitle : 'INVOICE'}
-                  </div>
-
-                  <table style={{ width: '100%', fontSize: '11.5px', marginTop: '6px' }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ color: '#64748b', fontWeight: 'bold', padding: '2px 0' }}>Bill No:</td>
-                        <td style={{ textAlign: 'right', fontWeight: '900', fontFamily: 'monospace', fontSize: '13px', color: '#0f172a' }}>
-                          {inv.invoiceNo}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: '#64748b', padding: '2px 0' }}>Date:</td>
-                        <td style={{ textAlign: 'right', fontWeight: '700' }}>
-                          {inv.despatchDate || formatDateTime(inv.date)}
-                        </td>
-                      </tr>
-                      {inv.orderNo && (
-                        <tr>
-                          <td style={{ color: '#64748b', padding: '2px 0' }}>Order No:</td>
-                          <td style={{ textAlign: 'right', fontWeight: '600' }}>{inv.orderNo}</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* CUSTOMER DETAILS (BILLED TO) */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                background: '#f8fafc',
-                border: '1.5px solid #cbd5e1',
-                borderRadius: '6px',
-                padding: '8px 12px',
-                fontSize: '12px'
-              }}>
-                <div>
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                    Billed To / வாடிக்கையாளர் விவரம்:
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', marginTop: '2px' }}>
-                    M/s {inv.customerName || 'Cash / Walk-in Customer'}
-                  </div>
-                  <div style={{ color: '#334155', marginTop: '2px', fontWeight: '500' }}>
-                    <strong>Address:</strong> {inv.customerAddress || 'Direct / Sivakasi'}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  {inv.customerMobile && (
-                    <div style={{ fontSize: '12px' }}>
-                      <span style={{ color: '#64748b' }}>Customer Mobile: </span>
-                      <strong style={{ color: '#881337', fontSize: '13px' }}>+91 {inv.customerMobile}</strong>
-                    </div>
-                  )}
-                  {inv.customerGstin ? (
-                    <div style={{ fontSize: '12px', marginTop: '2px' }}>
-                      <span style={{ color: '#64748b' }}>GSTIN / PAN: </span>
-                      <strong style={{ fontFamily: 'monospace', letterSpacing: '0.04em' }}>{inv.customerGstin}</strong>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                      Place of Supply: <strong>Tamil Nadu (33)</strong>
-                    </div>
-                  )}
-                  <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>
-                    Payment Mode: <span style={{ fontWeight: 'bold', color: '#16a34a' }}>{inv.paymentMethod || 'Cash'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* PRODUCTS TABLE */}
-              <div style={{ overflow: 'hidden', border: '1.5px solid #000000', borderRadius: '4px' }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '11.5px',
-                  color: '#000000'
-                }}>
-                  <thead>
-                    <tr style={{
-                      background: '#1e293b',
-                      color: '#ffffff',
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                      fontSize: '11.5px'
-                    }}>
-                      <th style={{ width: '5%', padding: '6px 4px', borderRight: '1px solid #ffffff' }}>S.N</th>
-                      <th style={{ width: '35%', padding: '6px 8px', textAlign: 'left', borderRight: '1px solid #ffffff' }}>
-                        Cracker Product Description (பட்டாசு பெயர்)
-                      </th>
-                      <th style={{ width: '8%', padding: '6px 4px', borderRight: '1px solid #ffffff' }}>Cases</th>
-                      <th style={{ width: '12%', padding: '6px 4px', borderRight: '1px solid #ffffff' }}>Pack Content</th>
-                      <th style={{ width: '8%', padding: '6px 4px', borderRight: '1px solid #ffffff' }}>Qty</th>
-                      <th style={{ width: '11%', padding: '6px 4px', borderRight: '1px solid #ffffff' }}>Rate (₹)</th>
-                      <th style={{ width: '7%', padding: '6px 4px', borderRight: '1px solid #ffffff' }}>Disc.%</th>
-                      <th style={{ width: '14%', padding: '6px 8px', textAlign: 'right' }}>Total (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inv.items && inv.items.map((item, idx) => (
-                      <tr key={idx} style={{
-                        borderBottom: '1px solid #cbd5e1',
-                        background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
-                        height: '27px'
+                  {/* Left: Brand Logo & Title */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                    {shop.logo ? (
+                      <img
+                        src={shop.logo}
+                        alt="Logo"
+                        style={{ maxHeight: '65px', maxWidth: '110px', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '54px',
+                        height: '54px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#f59e0b',
+                        fontWeight: '900',
+                        fontSize: '20px',
+                        boxShadow: '0 4px 10px rgba(30,58,138,0.3)',
+                        border: '2px solid #fbbf24'
                       }}>
-                        <td style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #cbd5e1' }}>
-                          {idx + 1}
-                        </td>
-                        <td style={{ textAlign: 'left', padding: '4px 8px', borderRight: '1px solid #cbd5e1', fontWeight: 'bold' }}>
-                          {item.name}
-                        </td>
-                        <td style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #cbd5e1' }}>
-                          {item.cases || 1}
-                        </td>
-                        <td style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #cbd5e1' }}>
-                          {item.packContent || item.packing || '1 BOX'}
-                        </td>
-                        <td style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #cbd5e1', fontWeight: 'bold' }}>
-                          {item.qty}
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '4px 8px', borderRight: '1px solid #cbd5e1' }}>
-                          {Number(item.rate).toFixed(2)}
-                        </td>
-                        <td style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #cbd5e1', color: '#047857' }}>
-                          {item.discount ? `${Number(item.discount).toFixed(1)}%` : '-'}
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '4px 8px', fontWeight: 'bold' }}>
-                          {Number(item.total).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-
-                    {/* Empty placeholder rows for balance */}
-                    {emptyRowsA4.map((_, i) => (
-                      <tr key={`empty-a4-${i}`} style={{ height: '24px', borderBottom: '1px solid #e2e8f0' }}>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td style={{ borderRight: '1px solid #e2e8f0' }}>&nbsp;</td>
-                        <td>&nbsp;</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* TABLE SUMMARY BAR */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '40% 12% 16% 32%',
-                background: '#f1f5f9',
-                border: '1.5px solid #000000',
-                padding: '4px 10px',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>
-                <div>Total Items Billed: {inv.items ? inv.items.length : 0}</div>
-                <div style={{ textAlign: 'center' }}>Cases: {totalCases}</div>
-                <div style={{ textAlign: 'center' }}>Total Qty: {totalQty}</div>
-                <div style={{ textAlign: 'right' }}>SubTotal: ₹{subtotal.toFixed(2)}</div>
-              </div>
-
-              {/* LOWER SPLIT: UPI & Words & Terms on Left / Financials on Right */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 310px',
-                gap: '1rem',
-                alignItems: 'start'
-              }}>
-                {/* Left Column: Amount in Words, UPI QR Code, Terms */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                  {/* Amount in Words */}
-                  <div style={{
-                    background: '#fef3c7',
-                    border: '1px solid #f59e0b',
-                    borderRadius: '4px',
-                    padding: '6px 10px',
-                    fontSize: '11.5px'
-                  }}>
-                    <strong style={{ color: '#92400e' }}>Amount in Words (வார்த்தைகளில்):</strong>
-                    <div style={{ fontWeight: 'bold', color: '#1e293b', marginTop: '2px', fontStyle: 'italic' }}>
-                      {numberToWordsIndian(netAmount)}
+                        SG
+                      </div>
+                    )}
+                    <div>
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '900',
+                        color: '#0f172a',
+                        letterSpacing: '0.04em',
+                        lineHeight: '1.1',
+                        fontFamily: "'Outfit', 'Inter', sans-serif"
+                      }}>
+                        SRI GUGAN
+                      </div>
+                      <div style={{
+                        fontSize: '16px',
+                        fontWeight: '800',
+                        color: '#f97316',
+                        letterSpacing: '0.25em',
+                        lineHeight: '1.1',
+                        marginTop: '1px'
+                      }}>
+                        CRAKERS
+                      </div>
+                      <div style={{
+                        fontSize: '8.5px',
+                        fontWeight: '700',
+                        color: '#1e3a8a',
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        marginTop: '3px'
+                      }}>
+                        LIGHT UP YOUR CELEBRATIONS
+                      </div>
                     </div>
                   </div>
 
-                  {/* UPI QR Code Box & Payment Mode */}
+                  {/* Right: Premium Quality Tagline & Badges */}
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#1e3a8a', fontStyle: 'italic' }}>
+                      Premium Quality Crackers
+                    </div>
+                    <div style={{ fontSize: '10.5px', fontWeight: '600', color: '#475569', fontStyle: 'italic' }}>
+                      for a Brighter Tomorrow
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '4px', fontSize: '10px', color: '#1e3a8a', fontWeight: '600' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justify: 'flex-end', gap: '4px' }}>
+                        <CheckCircle2 size={12} color="#0284c7" />
+                        <span>Safe &amp; Reliable</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justify: 'flex-end', gap: '4px' }}>
+                        <Sparkles size={12} color="#0284c7" />
+                        <span>Wide Range</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justify: 'flex-end', gap: '4px' }}>
+                        <ShieldCheck size={12} color="#0284c7" />
+                        <span>Best Prices</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* INVOICE Title & Subtitle + Date Box */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-end',
+                  marginBottom: '1.25rem'
+                }}>
+                  <div>
+                    <h1 style={{
+                      fontSize: '28px',
+                      fontWeight: '900',
+                      color: '#1e3a8a',
+                      margin: 0,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase'
+                    }}>
+                      INVOICE
+                    </h1>
+                    <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', fontWeight: '500' }}>
+                      Thank you for your purchase!
+                    </div>
+                    <div style={{ height: '3px', width: '45px', background: '#f97316', borderRadius: '2px', marginTop: '6px' }}></div>
+                  </div>
+
+                  {/* Meta Box (Invoice No, Date, Time) */}
+                  <div style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    minWidth: '220px'
+                  }}>
+                    <table style={{ width: '100%', fontSize: '11.5px', borderCollapse: 'collapse' }}>
+                      <tbody>
+                        <tr>
+                          <td style={{ color: '#1e3a8a', fontWeight: '700', padding: '2px 0' }}>Invoice No</td>
+                          <td style={{ color: '#1e3a8a', fontWeight: '700', padding: '2px 6px' }}>:</td>
+                          <td style={{ fontWeight: '700', color: '#334155', textAlign: 'right' }}>{inv.invoiceNo}</td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#1e3a8a', fontWeight: '700', padding: '2px 0' }}>Date</td>
+                          <td style={{ color: '#1e3a8a', fontWeight: '700', padding: '2px 6px' }}>:</td>
+                          <td style={{ fontWeight: '700', color: '#334155', textAlign: 'right' }}>
+                            {inv.date ? inv.date.split('T')[0] : (inv.despatchDate || getTodayFormatted())}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={{ color: '#1e3a8a', fontWeight: '700', padding: '2px 0' }}>Time</td>
+                          <td style={{ color: '#1e3a8a', fontWeight: '700', padding: '2px 6px' }}>:</td>
+                          <td style={{ fontWeight: '700', color: '#334155', textAlign: 'right' }}>
+                            {inv.date && inv.date.includes('T') ? new Date(inv.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '07:45 PM'}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Customer Details Card */}
+                <div style={{
+                  background: '#f8fafc',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  marginBottom: '1.25rem',
+                  border: '1px solid #f1f5f9'
+                }}>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.85rem',
-                    padding: '8px 10px',
-                    background: '#ffffff',
-                    border: '1.5px dashed #059669',
-                    borderRadius: '6px'
+                    gap: '6px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    color: '#1e3a8a',
+                    marginBottom: '6px'
                   }}>
-                    <img
-                      src={qrCodeUrl}
-                      alt="UPI QR Code"
-                      style={{
-                        width: '78px',
-                        height: '78px',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '4px',
-                        display: 'block'
-                      }}
-                    />
-                    <div style={{ flex: 1, fontSize: '11px', color: '#1e293b' }}>
-                      <div style={{ fontWeight: '900', color: '#059669', fontSize: '11.5px', textTransform: 'uppercase' }}>
-                        📲 Instant UPI Scan &amp; Pay
-                      </div>
-                      <div style={{ fontSize: '10.5px', color: '#475569', marginTop: '1px' }}>
-                        GPay • PhonePe • Paytm • BHIM
-                      </div>
-                      <div style={{ marginTop: '3px', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '11px' }}>
-                        UPI ID: {upiId}
-                      </div>
-                      <div style={{ fontSize: '10px', color: '#16a34a', marginTop: '2px' }}>
-                        Amount: <strong>₹{netAmount.toFixed(2)}</strong>
-                      </div>
-                    </div>
+                    <User size={14} color="#1e3a8a" />
+                    <span>Customer Details</span>
                   </div>
 
-                  {/* Terms & Conditions */}
-                  <div style={{
-                    fontSize: '9.5px',
-                    color: '#475569',
-                    lineHeight: '1.35',
-                    borderTop: '1px solid #e2e8f0',
-                    paddingTop: '4px'
-                  }}>
-                    <div style={{ fontWeight: 'bold', color: '#0f172a', textTransform: 'uppercase' }}>
-                      Terms &amp; Safety Conditions (விதிமுறைகள்):
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '11.5px', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span style={{ color: '#1e3a8a', fontWeight: '700', minWidth: '55px' }}>Name</span>
+                      <span style={{ color: '#1e3a8a', fontWeight: '700' }}>:</span>
+                      <span style={{ fontWeight: '700', color: '#0f172a' }}>{inv.customerName || 'Cash Customer'}</span>
                     </div>
-                    <div>1. Goods once sold will not be exchanged or refunded.</div>
-                    <div>2. Store fireworks in a cool, dry and fireproof location.</div>
-                    <div>3. Light crackers strictly under responsible adult supervision.</div>
-                    <div>4. Subject to Sivakasi Jurisdiction only.</div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span style={{ color: '#1e3a8a', fontWeight: '700', minWidth: '55px' }}>Phone</span>
+                      <span style={{ color: '#1e3a8a', fontWeight: '700' }}>:</span>
+                      <span style={{ color: '#334155' }}>{inv.customerMobile || '-'}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span style={{ color: '#1e3a8a', fontWeight: '700', minWidth: '55px' }}>Address</span>
+                      <span style={{ color: '#1e3a8a', fontWeight: '700' }}>:</span>
+                      <span style={{ color: '#334155' }}>{inv.customerAddress || '-'}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Column: Financial Calculations & Grand Total */}
-                <div style={{
-                  border: '1.5px solid #000000',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                  background: '#ffffff'
-                }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                {/* ITEMS TABLE (Matching Reference Image Dark Blue Header) */}
+                <div style={{ borderRadius: '6px 6px 0 0', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '11px',
+                    textAlign: 'left'
+                  }}>
+                    <thead>
+                      <tr style={{
+                        background: '#0f2942',
+                        color: '#ffffff',
+                        fontWeight: '700',
+                        fontSize: '10.5px'
+                      }}>
+                        <th style={{ width: '5%', padding: '8px 6px', textAlign: 'center' }}>S.N</th>
+                        <th style={{ width: '25%', padding: '8px 8px' }}>Cracker Name</th>
+                        <th style={{ width: '18%', padding: '8px 8px' }}>Category</th>
+                        <th style={{ width: '15%', padding: '8px 8px' }}>Brand / Packing</th>
+                        <th style={{ width: '10%', padding: '8px 6px', textAlign: 'right' }}>MRP (₹)</th>
+                        <th style={{ width: '10%', padding: '8px 6px', textAlign: 'right' }}>Sell Price (₹)</th>
+                        <th style={{ width: '5%', padding: '8px 4px', textAlign: 'center' }}>Qty</th>
+                        <th style={{ width: '6%', padding: '8px 4px', textAlign: 'center' }}>Disc %</th>
+                        <th style={{ width: '12%', padding: '8px 8px', textAlign: 'right' }}>Amount (₹)</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      <tr>
-                        <td style={{ padding: '4px 10px', color: '#475569' }}>Gross SubTotal:</td>
-                        <td style={{ textAlign: 'right', padding: '4px 10px', fontWeight: '600' }}>
-                          ₹{subtotal.toFixed(2)}
-                        </td>
-                      </tr>
+                      {inv.items && inv.items.map((item, idx) => {
+                        const mrpVal = Number(item.mrp || item.purchasePrice || item.sellingPrice || item.rate || 0);
+                        const sellVal = Number(item.sellingPrice || item.rate || 0);
+                        const discVal = Number(item.discount || 0);
+                        const lineGross = Number((item.qty * sellVal).toFixed(2));
 
-                      {pfAmount > 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#475569' }}>P &amp; F Charges ({pfPercent}%):</td>
-                          <td style={{ textAlign: 'right', padding: '4px 10px', fontWeight: '600' }}>
-                            ₹{pfAmount.toFixed(2)}
-                          </td>
-                        </tr>
-                      )}
-
-                      {taxAmount > 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#475569' }}>Tax / GST ({taxPercent}%):</td>
-                          <td style={{ textAlign: 'right', padding: '4px 10px', fontWeight: '600' }}>
-                            ₹{taxAmount.toFixed(2)}
-                          </td>
-                        </tr>
-                      )}
-
-                      {roundOff !== 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#64748b' }}>Round Off:</td>
-                          <td style={{ textAlign: 'right', padding: '4px 10px', color: '#64748b' }}>
-                            {roundOff > 0 ? `+₹${roundOff.toFixed(2)}` : `₹${roundOff.toFixed(2)}`}
-                          </td>
-                        </tr>
-                      )}
-
-                      {/* NET AMOUNT (GRAND TOTAL) */}
-                      <tr style={{ background: '#881337', color: '#ffffff' }}>
-                        <td style={{ padding: '8px 10px', fontSize: '13px', fontWeight: '900', textTransform: 'uppercase' }}>
-                          NET AMOUNT (மொத்தம்):
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '8px 10px', fontSize: '16px', fontWeight: '900' }}>
-                          ₹{netAmount.toFixed(2)}
-                        </td>
-                      </tr>
-
-                      {commissionAmount > 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#dc2626' }}>Commission @ {commissionPercent}%:</td>
-                          <td style={{ textAlign: 'right', padding: '4px 10px', color: '#dc2626', fontWeight: 'bold' }}>
-                            -₹{commissionAmount.toFixed(2)}
-                          </td>
-                        </tr>
-                      )}
-
-                      {commissionAmount > 0 && (
-                        <tr style={{ borderTop: '1.5px solid #000000', background: '#ecfdf5' }}>
-                          <td style={{ padding: '6px 10px', fontWeight: '900', color: '#065f46', fontSize: '12.5px' }}>
-                            NET BALANCE PAYABLE:
-                          </td>
-                          <td style={{ textAlign: 'right', padding: '6px 10px', fontWeight: '900', color: '#065f46', fontSize: '14px' }}>
-                            ₹{netBalance.toFixed(2)}
-                          </td>
-                        </tr>
-                      )}
+                        return (
+                          <tr key={idx} style={{
+                            borderBottom: '1px solid #e2e8f0',
+                            background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                            height: '26px'
+                          }}>
+                            <td style={{ textAlign: 'center', padding: '4px', color: '#64748b' }}>{idx + 1}</td>
+                            <td style={{ padding: '4px 8px', fontWeight: '600', color: '#0f172a' }}>{item.name}</td>
+                            <td style={{ padding: '4px 8px', color: '#475569' }}>{item.category || 'Standard'}</td>
+                            <td style={{ padding: '4px 8px', color: '#475569' }}>{item.brand || item.packing || item.packContent || 'Standard Pack'}</td>
+                            <td style={{ textAlign: 'right', padding: '4px 6px', color: '#64748b' }}>{mrpVal.toFixed(2)}</td>
+                            <td style={{ textAlign: 'right', padding: '4px 6px', fontWeight: '600', color: '#0f172a' }}>{sellVal.toFixed(2)}</td>
+                            <td style={{ textAlign: 'center', padding: '4px' }}>{item.qty}</td>
+                            <td style={{ textAlign: 'center', padding: '4px', color: '#475569' }}>{discVal > 0 ? `${discVal}%` : '0%'}</td>
+                            <td style={{ textAlign: 'right', padding: '4px 8px', fontWeight: '700', color: '#0f172a' }}>{lineGross.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
-              </div>
 
-              {/* FOOTER SIGNATURES & FESTIVE GREETING */}
-              <div style={{
-                marginTop: '0.4rem',
-                borderTop: '1.5px solid #000000',
-                paddingTop: '0.65rem',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                alignItems: 'end',
-                fontSize: '11px'
-              }}>
-                <div>
-                  <div style={{ height: '36px' }}></div>
-                  <div style={{ borderTop: '1px dashed #64748b', display: 'inline-block', paddingTop: '2px', fontWeight: 'bold' }}>
-                    Customer / Receiver's Signature
+                {/* BOTTOM SUMMARY SPLIT (Terms on Left, Summary Box on Right) */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 280px',
+                  gap: '1.25rem',
+                  marginTop: '1.25rem',
+                  alignItems: 'end'
+                }}>
+                  {/* Left Terms & Conditions */}
+                  <div style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    background: '#ffffff'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      color: '#1e3a8a',
+                      marginBottom: '4px'
+                    }}>
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '50%',
+                        background: '#1e3a8a',
+                        color: '#ffffff',
+                        fontSize: '9px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold'
+                      }}>i</div>
+                      <span>Terms &amp; Conditions</span>
+                    </div>
+
+                    <ul style={{
+                      margin: 0,
+                      paddingLeft: '14px',
+                      fontSize: '9.5px',
+                      color: '#475569',
+                      lineHeight: '1.4'
+                    }}>
+                      {shop.terms ? (
+                        shop.terms.split('\n').filter(Boolean).map((t, idx) => <li key={idx}>{t}</li>)
+                      ) : (
+                        <>
+                          <li>Goods once sold will not be taken back or exchanged.</li>
+                          <li>Use crackers in a safe and open place under adult supervision.</li>
+                          <li>Follow safety instructions while bursting fireworks.</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* Right Summary Table */}
+                  {(() => {
+                    const grossTotal = inv.items ? inv.items.reduce((sum, item) => {
+                      const sell = Number(item.sellingPrice || item.rate || 0);
+                      return sum + (item.qty * sell);
+                    }, 0) : subtotal;
+
+                    const totalDiscount = inv.items ? inv.items.reduce((sum, item) => {
+                      const sell = Number(item.sellingPrice || item.rate || 0);
+                      const disc = Number(item.discount || 0);
+                      return sum + (item.qty * sell * (disc / 100));
+                    }, 0) : 0;
+
+                    const grandNet = grossTotal - totalDiscount;
+
+                    return (
+                      <div style={{
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '1px solid #e2e8f0',
+                        background: '#f8fafc'
+                      }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                              <td style={{ padding: '6px 12px', fontWeight: '700', color: '#1e3a8a' }}>Total Qty</td>
+                              <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: '800', color: '#0f172a' }}>{totalQty}</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                              <td style={{ padding: '6px 12px', fontWeight: '700', color: '#1e3a8a' }}>Subtotal</td>
+                              <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: '800', color: '#0f172a' }}>₹ {grossTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                              <td style={{ padding: '6px 12px', fontWeight: '700', color: '#1e3a8a' }}>Discount</td>
+                              <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: '800', color: '#059669' }}>-₹ {totalDiscount.toFixed(2)}</td>
+                            </tr>
+                            <tr style={{ background: '#0f2942', color: '#ffffff' }}>
+                              <td style={{ padding: '8px 12px', fontSize: '13px', fontWeight: '800' }}>Grand Total</td>
+                              <td style={{ padding: '8px 12px', textAlign: 'right', fontSize: '15px', fontWeight: '900' }}>₹ {grandNet.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                            <tr style={{ background: '#f0fdf4', color: '#166534', borderTop: '1px solid #bbf7d0' }}>
+                              <td style={{ padding: '6px 12px', fontSize: '11px', fontWeight: '800' }}>Payment Status</td>
+                              <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: '11px', fontWeight: '800' }}>
+                                ✓ {(inv.paymentMethod || 'CASH').toUpperCase()} ₹ {grandNet.toFixed(2)} (PAID)
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+
+                {/* SIGNATURE GREETING "Thank You! Visit Again..." */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginTop: '1.25rem',
+                  paddingRight: '1rem'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      fontSize: '26px',
+                      fontFamily: "'Brush Script MT', 'Dancing Script', cursive",
+                      color: '#1e3a8a',
+                      fontWeight: 'bold',
+                      lineHeight: '1'
+                    }}>
+                      Thank You!
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.05em', marginTop: '2px' }}>
+                      Visit Again...
+                    </div>
                   </div>
                 </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 'bold', color: '#881337' }}>
-                    For {shop.name || 'SHRI GUGAN CRACKERS'}
-                  </div>
-                  <div style={{ height: '36px' }}></div>
-                  <div style={{ borderTop: '1px dashed #64748b', display: 'inline-block', paddingTop: '2px', fontWeight: 'bold' }}>
-                    Authorized Signatory &amp; Stamp
-                  </div>
-                </div>
               </div>
+            </div>
 
-              {/* BILINGUAL GREETING */}
+              {/* DARK BLUE FOOTER BAR */}
               <div style={{
-                textAlign: 'center',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                color: '#881337',
-                borderTop: '1px solid #f1f5f9',
-                paddingTop: '4px'
+                background: '#0f2942',
+                color: '#ffffff',
+                padding: '8px 1.5rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '11.5px',
+                fontWeight: '600'
               }}>
-                🎉 {shop.footerMessage || 'Thank you for choosing Shri Gugan Crackers! Visit Again. / நன்றி! மீண்டும் வருக!'} 🎉
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={14} color="#f97316" />
+                  <span>Sri Gugan Crakers &nbsp;|&nbsp; Light Up Your Celebrations</span>
+                </div>
+                {/* Decorative fireworks element */}
+                <div style={{ opacity: 0.8 }}>
+                  <Sparkles size={16} color="#fbbf24" />
+                </div>
               </div>
             </div>
           ) : printFormat === 'performa' ? (
@@ -723,7 +606,7 @@ export const InvoicePrintModal = () => {
               }}>
                 <div>
                   <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#000000', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    {shop.name || 'SHRI GUGAN CRACKERS'} • {shop.tamilName || 'ஸ்ரீ குகன் கிராக்கர்ஸ்'}
+                    {shop.name || 'SRI GUGAN CRACKERS'}
                   </div>
                   <div style={{ fontSize: '11px', color: '#000000', marginTop: '1px' }}>
                     {shopAddress}, {shopCity} - {shopPincode}, {shopDistrict} Dist, {shopState}
@@ -811,7 +694,7 @@ export const InvoicePrintModal = () => {
                     color: '#000000',
                     lineHeight: 1.1
                   }}>
-                    {shop.name || 'SHRI GUGAN CRACKERS'}
+                    {shop.name || 'SRI GUGAN CRACKERS'}
                   </div>
                 </div>
               </div>
@@ -1035,10 +918,7 @@ export const InvoicePrintModal = () => {
                   style={{ maxHeight: '54px', maxWidth: '120px', objectFit: 'contain', margin: '0 auto 6px', display: 'block' }}
                 />
                 <div style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '-0.02em', color: '#000000' }}>
-                  {shop.name || 'SHRI GUGAN CRACKERS'}
-                </div>
-                <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '1px', color: '#374151' }}>
-                  {shop.tamilName || 'ஸ்ரீ குகன் கிராக்கர்ஸ்'}
+                  {shop.name || 'SRI GUGAN CRACKERS'}
                 </div>
                 <div style={{ fontSize: '10px', color: '#4b5563', marginTop: '2px' }}>
                   {shopAddress}, {shopCity} - {shopPincode}
@@ -1179,7 +1059,7 @@ export const InvoicePrintModal = () => {
               <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '10px' }}>
                 <div style={{ fontWeight: 700 }}>{shop.footerMessage}</div>
                 <div style={{ marginTop: '4px', fontSize: '9px', color: '#6b7280' }}>
-                  Software by Shri Gugan Billing
+                  Software by POS Billing System
                 </div>
               </div>
             </div>

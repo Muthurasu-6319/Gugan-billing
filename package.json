@@ -4,13 +4,20 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "server": "node server/index.js",
+    "client": "vite",
+    "dev": "concurrently \"node server/index.js\" \"vite\"",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "concurrently": "^10.0.5",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "lucide-react": "^1.41.0",
+    "mysql2": "^3.24.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

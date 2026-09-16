@@ -18,7 +18,19 @@ import { InvoicePrintModal } from './components/InvoicePrintModal';
 import { CheckCircle2, AlertCircle, Info, XCircle } from 'lucide-react';
 
 const AppContent = () => {
-  const { activeTab, toast } = useApp();
+  const { activeTab, setActiveTab, toast } = useApp();
+
+  // Global Keyboard listener: F2 switches to Quick Billing page immediately from anywhere
+  React.useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        setActiveTab('billing');
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [setActiveTab]);
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -36,8 +48,6 @@ const AppContent = () => {
         return <Customers />;
       case 'sales':
         return <SalesHistory />;
-      case 'returns':
-        return <SalesReturn />;
       case 'purchases':
         return <Purchases />;
       case 'suppliers':

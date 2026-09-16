@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import {
   Settings as SettingsIcon,
   Store,
+  Building2,
+  Flame,
   FileText,
   Percent,
   CreditCard,
@@ -28,6 +30,10 @@ export const Settings = () => {
 
   const [settingsTab, setSettingsTab] = useState('shop'); // shop, invoice, tax, user, backup
   const [formData, setFormData] = useState({ ...shop });
+
+  React.useEffect(() => {
+    setFormData({ ...shop });
+  }, [shop]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -63,7 +69,7 @@ export const Settings = () => {
       {/* Header */}
       <div>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>⚙️ Shop &amp; Software Settings (கடை அமைப்புகள்)</span>
+          <span>Shop &amp; Software Settings</span>
         </h2>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
           Configure shop details, invoice layouts, thermal printer size, tax options, roles and backups.
@@ -74,11 +80,11 @@ export const Settings = () => {
       <div className="card" style={{ padding: '0.5rem' }}>
         <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto' }}>
           {[
-            { id: 'shop', label: '🏪 Shop Details', desc: 'Name, Address & Contact' },
-            { id: 'invoice', label: '🧾 Invoice & Print', desc: 'A4 vs Thermal & Footer' },
-            { id: 'tax', label: '💰 Tax & GST', desc: 'Inclusive / Exclusive Rates' },
-            { id: 'user', label: '🔐 User Roles', desc: 'Admin vs Cashier Permissions' },
-            { id: 'backup', label: '💾 Backup & Restore', desc: 'Export & Reset Data' }
+            { id: 'shop', label: 'Shop Details' },
+            { id: 'invoice', label: 'Invoice & Print' },
+            { id: 'tax', label: 'Tax & GST' },
+            { id: 'user', label: 'User Roles' },
+            { id: 'backup', label: 'Backup & Restore' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -96,43 +102,33 @@ export const Settings = () => {
       {settingsTab === 'shop' && (
         <form onSubmit={handleSubmit} className="card" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Store size={18} color="var(--primary)" />
-            <span>Shop Profile &amp; Contact Information</span>
+            <Building2 size={18} color="var(--primary)" />
+            <span>Store Profile &amp; Contact Information</span>
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            {/* Logo Preview and Upload */}
-            <div style={{
-              gridColumn: 'span 2',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1.25rem',
-              padding: '1rem',
-              background: '#f8fafc',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-md)'
-            }}>
+            {/* Logo Upload Box */}
+            <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
               <div style={{
-                width: '70px',
-                height: '70px',
+                width: '72px',
+                height: '72px',
                 borderRadius: '12px',
                 background: '#ffffff',
                 border: '1px solid var(--border-color)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-xs)'
+                overflow: 'hidden'
               }}>
-                {formData.logo ? (
-                  <img src={formData.logo} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                {shop.logoUrl ? (
+                  <img src={shop.logoUrl} alt="Logo" style={{ maxHeight: '100px', width: 'auto', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', objectFit: 'contain' }} />
                 ) : (
-                  <span style={{ fontSize: '2rem' }}>🧨</span>
+                  <Flame size={32} color="var(--primary)" />
                 )}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                  Shop Logo (கடை லோகோ)
+                  Shop Logo
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '2px 0 0.5rem' }}>
                   Current logo from <code>src/assets/image.png</code>. Appears on bills, price lists and thermal receipts.
@@ -159,25 +155,14 @@ export const Settings = () => {
               </div>
             </div>
 
-            <div>
-              <label className="input-label">Shop Name (English) *</label>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label className="input-label">Shop Name *</label>
               <input
                 type="text"
                 name="name"
                 required
                 className="input"
                 value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label className="input-label">Shop Name (Tamil - தமிழ்) *</label>
-              <input
-                type="text"
-                name="tamilName"
-                className="input"
-                value={formData.tamilName}
                 onChange={handleChange}
               />
             </div>
@@ -194,7 +179,7 @@ export const Settings = () => {
             </div>
 
             <div style={{ gridColumn: 'span 2' }}>
-              <label className="input-label">Shop Address (முகவரி)</label>
+              <label className="input-label">Shop Address</label>
               <input
                 type="text"
                 name="address"
@@ -205,10 +190,11 @@ export const Settings = () => {
             </div>
 
             <div>
-              <label className="input-label">City / Town</label>
+              <label className="input-label">City / Town *</label>
               <input
                 type="text"
                 name="city"
+                required
                 className="input"
                 value={formData.city}
                 onChange={handleChange}
@@ -216,7 +202,7 @@ export const Settings = () => {
             </div>
 
             <div>
-              <label className="input-label">District (மாவட்டம்)</label>
+              <label className="input-label">District</label>
               <input
                 type="text"
                 name="district"
@@ -227,7 +213,7 @@ export const Settings = () => {
             </div>
 
             <div>
-              <label className="input-label">State (மாநிலம்)</label>
+              <label className="input-label">State</label>
               <input
                 type="text"
                 name="state"
@@ -313,7 +299,7 @@ export const Settings = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <label className="input-label">Invoice Prefix (பில் முன்னொட்டு)</label>
+              <label className="input-label">Invoice Prefix</label>
               <input
                 type="text"
                 name="invoicePrefix"
@@ -355,7 +341,7 @@ export const Settings = () => {
             </div>
 
             <div style={{ gridColumn: 'span 2' }}>
-              <label className="input-label">Bill Footer Message (பில் அடிக்குறிப்பு)</label>
+              <label className="input-label">Bill Footer Message</label>
               <input
                 type="text"
                 name="footerMessage"
@@ -403,7 +389,7 @@ export const Settings = () => {
                   checked={formData.taxInclusive}
                   onChange={handleChange}
                 />
-                <span>Selling Price is Tax Inclusive (வரி உள்ளடக்கிய விலை)</span>
+                <span>Selling Price is Tax Inclusive</span>
               </label>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 1.6rem' }}>
                 When checked, cracker prices listed are the final MRP amount. Tax is broken down automatically on invoice.
@@ -493,9 +479,9 @@ export const Settings = () => {
                 <li>Fast Billing Screen (F2 - F6)</li>
                 <li>Add &amp; view Customer records</li>
                 <li>View Sales history &amp; Print receipts</li>
-                <li style={{ color: 'var(--danger)', fontWeight: 600 }}>❌ Restricted: Gross Profit reports</li>
-                <li style={{ color: 'var(--danger)', fontWeight: 600 }}>❌ Restricted: Purchase prices</li>
-                <li style={{ color: 'var(--danger)', fontWeight: 600 }}>❌ Restricted: Shop settings</li>
+                <li style={{ color: 'var(--danger)', fontWeight: 600 }}>• Restricted: Gross Profit reports</li>
+                <li style={{ color: 'var(--danger)', fontWeight: 600 }}>• Restricted: Purchase prices</li>
+                <li style={{ color: 'var(--danger)', fontWeight: 600 }}>• Restricted: Shop settings</li>
               </ul>
 
               <button
@@ -522,7 +508,7 @@ export const Settings = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
             {/* Export */}
             <div style={{ padding: '1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontWeight: 800, fontSize: '1rem' }}>💾 Download Backup File</div>
+              <div style={{ fontWeight: 800, fontSize: '1rem' }}>Download Backup File</div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 1rem' }}>
                 Export your entire shop inventory, customers, suppliers, bills and settings as a secure JSON file.
               </p>
@@ -534,7 +520,7 @@ export const Settings = () => {
 
             {/* Import */}
             <div style={{ padding: '1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontWeight: 800, fontSize: '1rem' }}>🔄 Restore from Backup</div>
+              <div style={{ fontWeight: 800, fontSize: '1rem' }}>Restore from Backup</div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 1rem' }}>
                 Upload a previously exported backup file to restore complete data.
               </p>
@@ -547,7 +533,7 @@ export const Settings = () => {
 
             {/* Reset / Wipe */}
             <div style={{ padding: '1.25rem', border: '1px solid #fecaca', borderRadius: 'var(--radius-lg)', background: '#fff5f5' }}>
-              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--danger)' }}>⚠️ Clear All Records (Clean Slate)</div>
+              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--danger)' }}>Clear All Records (Clean Slate)</div>
               <p style={{ fontSize: '0.75rem', color: '#991b1b', margin: '4px 0 1rem' }}>
                 Wipe all items, customers, suppliers and bills so you can manage purely real crackers data.
               </p>

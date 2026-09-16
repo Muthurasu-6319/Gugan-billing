@@ -7,24 +7,18 @@ import {
   AlertTriangle,
   ShoppingBag,
   Calendar,
-  CreditCard,
-  RotateCcw,
-  PlusCircle,
   Sparkles,
-  ArrowUpRight,
-  Eye,
   Printer,
-  ChevronRight,
-  Wallet
+  Wallet,
+  ArrowRight
 } from 'lucide-react';
-import { formatCurrency, formatCurrencyNoDec, formatDateTime } from '../utils/formatters';
+import { formatCurrency, formatCurrencyNoDec } from '../utils/formatters';
 
 export const Dashboard = () => {
   const {
     shop,
     sales,
     products,
-    returns,
     setActiveTab,
     triggerPrintBill
   } = useApp();
@@ -34,32 +28,72 @@ export const Dashboard = () => {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 
-  const todaySales = sales.filter((s) => new Date(s.date).getTime() >= todayStart);
-  const monthSales = sales.filter((s) => new Date(s.date).getTime() >= thisMonthStart);
+  const isTodayDate = (dateVal) => {
+    if (!dateVal) return false;
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+      return d.getTime() >= todayStart;
+    }
+    const parts = String(dateVal).split('-');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2].slice(0, 4), 10);
+      const parsed = new Date(year, month, day).getTime();
+      return !isNaN(parsed) && parsed >= todayStart;
+    }
+    return false;
+  };
 
-  const todaySalesTotal = todaySales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
-  const monthSalesTotal = monthSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const isThisMonthDate = (dateVal) => {
+    if (!dateVal) return false;
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+      return d.getTime() >= thisMonthStart;
+    }
+    const parts = String(dateVal).split('-');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2].slice(0, 4), 10);
+      const parsed = new Date(year, month, day).getTime();
+      return !isNaN(parsed) && parsed >= thisMonthStart;
+    }
+    return false;
+  };
+
+  const todaySales = sales.filter((s) => isTodayDate(s.date) || isTodayDate(s.createdAt));
+  const monthSales = sales.filter((s) => isThisMonthDate(s.date) || isThisMonthDate(s.createdAt));
+
+  const todaySalesTotal = todaySales.reduce((sum, s) => sum + (Number(s.grandTotal) || Number(s.netAmount) || Number(s.subTotal) || 0), 0);
+  const monthSalesTotal = monthSales.reduce((sum, s) => sum + (Number(s.grandTotal) || Number(s.netAmount) || Number(s.subTotal) || 0), 0);
   const todayBillsCount = todaySales.length;
 
-  // Collection breakdown (Cash, UPI, Card, Split)
+  // Collection breakdown (Cash, UPI, Card)
   let cashCol = 0;
   let upiCol = 0;
   let cardCol = 0;
 
   todaySales.forEach((s) => {
-    if (s.paymentMethod === 'Cash') cashCol += s.grandTotal;
-    else if (s.paymentMethod === 'UPI') upiCol += s.grandTotal;
-    else if (s.paymentMethod === 'Card') cardCol += s.grandTotal;
-    else if (s.paymentMethod === 'Split' && s.splitDetails) {
+    const pm = (s.paymentMethod || s.paymentMode || 'Cash').toString().trim().toLowerCase();
+    const amount = Number(s.grandTotal) || Number(s.netAmount) || Number(s.subTotal) || 0;
+
+    if (pm.includes('upi') || pm.includes('gpay') || pm.includes('phonepe') || pm.includes('online')) {
+      upiCol += amount;
+    } else if (pm.includes('card') || pm.includes('swipe') || pm.includes('credit') || pm.includes('debit')) {
+      cardCol += amount;
+    } else if (pm.includes('split') && s.splitDetails) {
       cashCol += Number(s.splitDetails.cash) || 0;
       upiCol += Number(s.splitDetails.upi) || 0;
       cardCol += Number(s.splitDetails.card) || 0;
+    } else {
+      cashCol += amount;
     }
   });
 
   const todayCollectionTotal = cashCol + upiCol + cardCol;
 
-  // Low stock and out of stock
+  // Low stock and out of stock items
   const lowStockItems = products.filter((p) => p.currentStock > 0 && p.currentStock <= p.minimumStock);
   const outOfStockItems = products.filter((p) => p.currentStock <= 0);
 
@@ -67,294 +101,236 @@ export const Dashboard = () => {
   const recentBills = sales.slice(0, 5);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Welcome Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #ffffff 0%, #fff7ed 100%)',
-        border: '1px solid #fed7aa',
-        borderRadius: 'var(--radius-lg)',
-        padding: '1.25rem 1.5rem',
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+      {/* Sleek Hero Welcome Banner */}
+      <div className="card" style={{
+        padding: '1.5rem 1.75rem',
+        background: '#ffffff',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        boxShadow: 'var(--shadow-xs)'
+        justifyContent: 'space-between'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '12px',
-            background: '#ffffff',
-            border: '1px solid #fed7aa',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-xs)'
-          }}>
-            {shop.logo ? (
-              <img src={shop.logo} alt={shop.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            ) : (
-              <span style={{ fontSize: '2rem' }}>🎆</span>
-            )}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+              Welcome back to {shop.name}!
+            </h2>
+            <span className="badge badge-primary">POS Active</span>
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
-                Welcome to {shop.name}!
-              </h2>
-              <span className="badge badge-primary">Diwali POS Ready</span>
-            </div>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-              {shop.tamilName} • Fast billing, real-time stock sync &amp; multi-payment collection.
-            </p>
-          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.35rem 0 0', fontWeight: 500 }}>
+            Here is your sales summary &amp; stock overview for today.
+          </p>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={() => setActiveTab('billing')} className="btn btn-primary" style={{ gap: '0.4rem', fontWeight: 700 }}>
-            <Sparkles size={16} />
+          <button onClick={() => setActiveTab('billing')} className="btn btn-primary btn-lg" style={{ gap: '0.5rem' }}>
+            <Sparkles size={18} />
             <span>New Bill (F2)</span>
           </button>
-          <button onClick={() => setActiveTab('stock')} className="btn btn-secondary" style={{ gap: '0.4rem' }}>
-            <Boxes size={16} />
-            <span>Check Stock</span>
+          <button onClick={() => setActiveTab('stock')} className="btn btn-secondary btn-lg" style={{ gap: '0.5rem' }}>
+            <Boxes size={18} />
+            <span>Check Inventory</span>
           </button>
         </div>
       </div>
 
-      {/* Primary KPI Grid (8 Key Metrics requested by user) */}
+      {/* Primary 4 KPI Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-        gap: '1rem'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+        gap: '1.25rem'
       }}>
-        {/* 1. Today's Sales */}
-        <div className="card" style={{ padding: '1.15rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>🧾 Today's Sales</span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+        {/* 1. Today's Revenue */}
+        <div className="card" style={{ padding: '1.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Today's Sales</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <TrendingUp size={18} />
-            </span>
+            </div>
           </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
             {formatCurrency(todaySalesTotal)}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            {todayBillsCount} bills billed today
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+            {todayBillsCount} total bills generated
           </div>
         </div>
 
         {/* 2. Today's Collection */}
-        <div className="card" style={{ padding: '1.15rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>💰 Today's Collection</span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: 'var(--success-light)', color: 'var(--success)' }}>
+        <div className="card" style={{ padding: '1.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Total Collection</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--success-light)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Wallet size={18} />
-            </span>
+            </div>
           </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--success)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--success)', letterSpacing: '-0.02em' }}>
             {formatCurrency(todayCollectionTotal)}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Direct cash &amp; digital received
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+            Cash &amp; Digital payments
           </div>
         </div>
 
-        {/* 3. Total Products */}
-        <div className="card" style={{ padding: '1.15rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>📦 Total Products</span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)' }}>
-              <Boxes size={18} />
-            </span>
+        {/* 3. Monthly Sales */}
+        <div className="card" style={{ padding: '1.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>This Month Sales</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Calendar size={18} />
+            </div>
           </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-            {products.length}
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+            {formatCurrencyNoDec(monthSalesTotal)}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Across 11 Sivakasi categories
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+            {monthSales.length} monthly transactions
           </div>
         </div>
 
-        {/* 4. Low Stock */}
+        {/* 4. Stock Alerts */}
         <div
           className="card"
           onClick={() => setActiveTab('stock')}
           style={{
-            padding: '1.15rem',
+            padding: '1.35rem',
             cursor: 'pointer',
             borderColor: lowStockItems.length > 0 ? '#fca5a5' : 'var(--border-color)',
-            background: lowStockItems.length > 0 ? 'var(--danger-light)' : '#ffffff'
+            background: lowStockItems.length > 0 ? '#fef2f2' : '#ffffff'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: lowStockItems.length > 0 ? '#991b1b' : 'var(--text-muted)' }}>
-              ⚠️ Low Stock
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: lowStockItems.length > 0 ? '#b91c1c' : 'var(--text-muted)' }}>
+              Stock Alerts
             </span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: '#fee2e2', color: 'var(--danger)' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fee2e2', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <AlertTriangle size={18} />
-            </span>
+            </div>
           </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--danger)', letterSpacing: '-0.02em' }}>
-            {lowStockItems.length + outOfStockItems.length}
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--danger)', letterSpacing: '-0.02em' }}>
+            {lowStockItems.length + outOfStockItems.length} Items
           </div>
-          <div style={{ fontSize: '0.75rem', color: lowStockItems.length > 0 ? '#b91c1c' : 'var(--text-muted)', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.78rem', color: lowStockItems.length > 0 ? '#b91c1c' : 'var(--text-muted)', marginTop: '0.35rem' }}>
             {outOfStockItems.length} out of stock
           </div>
         </div>
-
-        {/* 5. Today's Bills */}
-        <div className="card" style={{ padding: '1.15rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>🛒 Today's Bills</span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: 'var(--purple-light)', color: 'var(--purple)' }}>
-              <ShoppingBag size={18} />
-            </span>
-          </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-            {todayBillsCount}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Total receipts generated
-          </div>
-        </div>
-
-        {/* 6. This Month Sales */}
-        <div className="card" style={{ padding: '1.15rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>📊 This Month Sales</span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
-              <Calendar size={18} />
-            </span>
-          </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: '-0.02em' }}>
-            {formatCurrencyNoDec(monthSalesTotal)}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            {monthSales.length} total monthly orders
-          </div>
-        </div>
-
-        {/* 7. Returns */}
-        <div
-          className="card"
-          onClick={() => setActiveTab('returns')}
-          style={{ padding: '1.15rem', cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>↩️ Returns</span>
-            <span style={{ padding: '0.35rem', borderRadius: '8px', background: '#f1f5f9', color: 'var(--text-secondary)' }}>
-              <RotateCcw size={18} />
-            </span>
-          </div>
-          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
-            {returns.length}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Processed sales returns
-          </div>
-        </div>
       </div>
 
-      {/* Payment Modes Collection Section (Cash / UPI / Card) */}
-      <div className="card" style={{ padding: '1.25rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
-              💳 Today's Payment Mode Breakdown
-            </h3>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-              Collection split across Cash, UPI &amp; Cards
-            </p>
-          </div>
-          <span className="badge badge-neutral">Auto-Calculated</span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          {/* Cash */}
-          <div style={{ padding: '0.85rem 1rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803d' }}>💵 Cash Collection</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#166534', marginTop: '0.25rem' }}>
+      {/* Collection Split Section */}
+      <div className="card" style={{ padding: '1.5rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 1rem' }}>
+          Today's Collection Breakdown
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          <div style={{ padding: '1rem', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Cash Received</div>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#166534', marginTop: '0.25rem' }}>
               {formatCurrency(cashCol)}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#15803d', marginTop: '2px' }}>
-              {todayCollectionTotal > 0 ? `${Math.round((cashCol / todayCollectionTotal) * 100)}% of today's total` : '0%'}
-            </div>
           </div>
-
-          {/* UPI */}
-          <div style={{ padding: '0.85rem 1rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1d4ed8' }}>📱 UPI Collection (GPay / PhonePe)</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1e40af', marginTop: '0.25rem' }}>
+          <div style={{ padding: '1rem', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>UPI (GPay / PhonePe)</div>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e40af', marginTop: '0.25rem' }}>
               {formatCurrency(upiCol)}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#1d4ed8', marginTop: '2px' }}>
-              {todayCollectionTotal > 0 ? `${Math.round((upiCol / todayCollectionTotal) * 100)}% of today's total` : '0%'}
-            </div>
           </div>
-
-          {/* Card */}
-          <div style={{ padding: '0.85rem 1rem', background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7e22ce' }}>💳 Card / POS Swipe</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#6b21a8', marginTop: '0.25rem' }}>
+          <div style={{ padding: '1rem', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Card Swipe</div>
+            <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#6b21a8', marginTop: '0.25rem' }}>
               {formatCurrency(cardCol)}
-            </div>
-            <div style={{ fontSize: '0.7rem', color: '#7e22ce', marginTop: '2px' }}>
-              {todayCollectionTotal > 0 ? `${Math.round((cardCol / todayCollectionTotal) * 100)}% of today's total` : '0%'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Two Column Layout: Urgent Low Stock & Recent Bills */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.25rem' }}>
-        {/* Urgent Low Stock Alert List */}
-        <div className="card" style={{ padding: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <AlertTriangle size={18} color="var(--danger)" />
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
-                Low Stock Crackers Warning
-              </h3>
-            </div>
-            <button onClick={() => setActiveTab('stock')} className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem' }}>
-              Manage Stock
+      {/* 2 Column Section: Recent Bills & Low Stock Watchlist */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.5rem' }}>
+        {/* Recent Sales Bills */}
+        <div className="card" style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+              Recent Invoices
+            </h3>
+            <button onClick={() => setActiveTab('sales')} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
+              <span>View All</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Mode</th>
+                  <th style={{ textAlign: 'center' }}>Print</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentBills.map((b) => (
+                  <tr key={b.id}>
+                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{b.invoiceNo}</td>
+                    <td style={{ fontWeight: 600 }}>{b.customerName || 'Cash Customer'}</td>
+                    <td style={{ fontWeight: 700 }}>{formatCurrency(b.grandTotal)}</td>
+                    <td><span className="badge badge-blue">{b.paymentMethod}</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        onClick={() => triggerPrintBill(b)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                      >
+                        <Printer size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Low Stock Watchlist */}
+        <div className="card" style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+              Stock Alerts Watchlist
+            </h3>
+            <button onClick={() => setActiveTab('stock')} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
+              <span>Manage Stock</span>
+              <ArrowRight size={14} />
             </button>
           </div>
 
           {lowStockItems.length === 0 && outOfStockItems.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              ✅ All crackers have sufficient stock levels!
+            <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              All inventory levels are healthy!
             </div>
           ) : (
-            <div className="table-container" style={{ maxHeight: '240px', overflowY: 'auto' }}>
+            <div className="table-container">
               <table className="table">
                 <thead>
                   <tr>
                     <th>Product</th>
-                    <th>Category</th>
-                    <th style={{ textAlign: 'center' }}>Current</th>
+                    <th style={{ textAlign: 'center' }}>Stock</th>
                     <th style={{ textAlign: 'center' }}>Min</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...outOfStockItems, ...lowStockItems].map((prod) => (
+                  {[...outOfStockItems, ...lowStockItems].slice(0, 5).map((prod) => (
                     <tr key={prod.id}>
                       <td style={{ fontWeight: 600 }}>{prod.name}</td>
-                      <td>
-                        <span className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>{prod.category}</span>
-                      </td>
                       <td style={{ textAlign: 'center', fontWeight: 700, color: prod.currentStock <= 0 ? 'var(--danger)' : 'var(--warning)' }}>
                         {prod.currentStock} {prod.unit}
                       </td>
                       <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{prod.minimumStock}</td>
                       <td>
                         {prod.currentStock <= 0 ? (
-                          <span className="badge badge-danger">Out of Stock 🔴</span>
+                          <span className="badge badge-danger">Out of Stock</span>
                         ) : (
-                          <span className="badge badge-warning">Low Stock ⚠️</span>
+                          <span className="badge badge-warning">Low Stock</span>
                         )}
                       </td>
                     </tr>
@@ -363,61 +339,6 @@ export const Dashboard = () => {
               </table>
             </div>
           )}
-        </div>
-
-        {/* Recent Bills & Quick Reprint */}
-        <div className="card" style={{ padding: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Receipt size={18} color="var(--primary)" />
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
-                Recent Sales Bills
-              </h3>
-            </div>
-            <button onClick={() => setActiveTab('sales')} className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem' }}>
-              View All Bills
-            </button>
-          </div>
-
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Bill #</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Mode</th>
-                  <th style={{ textAlign: 'center' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentBills.map((b) => (
-                  <tr key={b.id}>
-                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{b.invoiceNo}</td>
-                    <td>
-                      <div>{b.customerName || 'Cash Customer'}</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{b.customerMobile}</div>
-                    </td>
-                    <td style={{ fontWeight: 700 }}>{formatCurrency(b.grandTotal)}</td>
-                    <td>
-                      <span className="badge badge-blue">{b.paymentMethod}</span>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        onClick={() => triggerPrintBill(b)}
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                        title="Print / View Invoice"
-                      >
-                        <Printer size={13} />
-                        <span>Print</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>

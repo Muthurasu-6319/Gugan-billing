@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   CATEGORIES,
   INITIAL_SHOP,
@@ -9,22 +9,11 @@ import {
   INITIAL_PURCHASES,
   INITIAL_RETURNS
 } from '../data/initialData';
+import { api } from '../utils/api';
 
 const AppContext = createContext();
 
 export const useApp = () => useContext(AppContext);
-
-// Wipe any previous dummy records from localStorage to ensure 100% real data only
-const DATA_VERSION = 'v3_zero_dummy_real_data';
-if (typeof window !== 'undefined' && localStorage.getItem('svc_data_version') !== DATA_VERSION) {
-  localStorage.removeItem('svc_products');
-  localStorage.removeItem('svc_customers');
-  localStorage.removeItem('svc_suppliers');
-  localStorage.removeItem('svc_sales');
-  localStorage.removeItem('svc_purchases');
-  localStorage.removeItem('svc_returns');
-  localStorage.setItem('svc_data_version', DATA_VERSION);
-}
 
 export const AppProvider = ({ children }) => {
   // Current user / role: 'admin' or 'cashier'
@@ -33,111 +22,166 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : { role: 'admin', name: 'Shop Owner (Admin)' };
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [dbConnected, setDbConnected] = useState(false);
+
   // Shop details
-  const [shop, setShop] = useState(() => {
-    const saved = localStorage.getItem('svc_shop');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const name = (!parsed.name || parsed.name === 'Sri Vinayaga Crackers') ? 'Shri Gugan Crackers' : parsed.name;
-      const tamilName = (!parsed.tamilName || parsed.tamilName === 'ஸ்ரீ விநாயகர் கிராக்கர்ஸ்') ? 'ஸ்ரீ குகன் கிராக்கர்ஸ்' : parsed.tamilName;
-      const city = (!parsed.city || parsed.city === 'Rajapalayam') ? 'Sivakasi' : parsed.city;
-      const address = (!parsed.address || parsed.address === 'Main Bazaar') ? INITIAL_SHOP.address : parsed.address;
-      const mobile = !parsed.mobile ? INITIAL_SHOP.mobile : parsed.mobile;
-      const email = !parsed.email ? INITIAL_SHOP.email : parsed.email;
-      const gstin = !parsed.gstin ? INITIAL_SHOP.gstin : parsed.gstin;
-      const upiId = !parsed.upiId ? INITIAL_SHOP.upiId : parsed.upiId;
-      return { ...INITIAL_SHOP, ...parsed, name, tamilName, city, address, mobile, email, gstin, upiId, logo: parsed.logo || '/logo.png' };
-    }
-    return INITIAL_SHOP;
-  });
+  const [shop, setShop] = useState(INITIAL_SHOP);
 
-  // Products (Zero dummy data)
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('svc_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
+  // Products
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
-  // Customers (Zero dummy data)
-  const [customers, setCustomers] = useState(() => {
-    const saved = localStorage.getItem('svc_customers');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
-  });
+  // Customers
+  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
 
   // Suppliers
-  const [suppliers, setSuppliers] = useState(() => {
-    const saved = localStorage.getItem('svc_suppliers');
-    return saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
-  });
+  const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
 
   // Sales
-  const [sales, setSales] = useState(() => {
-    const saved = localStorage.getItem('svc_sales');
-    return saved ? JSON.parse(saved) : INITIAL_SALES;
-  });
+  const [sales, setSales] = useState(INITIAL_SALES);
 
   // Purchases
-  const [purchases, setPurchases] = useState(() => {
-    const saved = localStorage.getItem('svc_purchases');
-    return saved ? JSON.parse(saved) : INITIAL_PURCHASES;
-  });
+  const [purchases, setPurchases] = useState(INITIAL_PURCHASES);
 
   // Returns
-  const [returns, setReturns] = useState(() => {
-    const saved = localStorage.getItem('svc_returns');
-    return saved ? JSON.parse(saved) : INITIAL_RETURNS;
-  });
+  const [returns, setReturns] = useState(INITIAL_RETURNS);
+
+  // Categories State
+  const [categories, setCategories] = useState(CATEGORIES);
 
   // Print modal state
   const [activeInvoiceForPrint, setActiveInvoiceForPrint] = useState(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState('billing'); // 'dashboard', 'billing', 'products', 'pricelist', 'customers', 'stock', 'purchases', 'suppliers', 'sales', 'returns', 'reports', 'settings'
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem('svc_active_tab');
+    return saved || 'billing';
+  });
 
   // Toast notifications
   const [toast, setToast] = useState(null);
 
-  const showToast = (message, type = 'success') => {
+  const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type, id: Date.now() });
     setTimeout(() => {
       setToast(null);
     }, 3500);
-  };
+  }, []);
 
-  // Synchronize state with localStorage
+  // Fetch all database state
+  const refreshAllData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [shopData, catData, prodData, custData, suppData, salesData, purData, retData] = await Promise.all([
+        api.getShop().catch(() => null),
+        api.getCategories().catch(() => []),
+        api.getProducts().catch(() => []),
+        api.getCustomers().catch(() => []),
+        api.getSuppliers().catch(() => []),
+        api.getSales().catch(() => []),
+        api.getPurchases().catch(() => []),
+        api.getReturns().catch(() => [])
+      ]);
+
+      setDbConnected(true);
+
+      if (shopData && shopData.id) {
+        setShop(prev => ({ ...INITIAL_SHOP, ...shopData }));
+      }
+      if (Array.isArray(catData) && catData.length > 0) {
+        setCategories(catData);
+      }
+      if (Array.isArray(prodData)) {
+        setProducts(prodData.map(p => ({
+          ...p,
+          purchasePrice: Number(p.purchasePrice) || 0,
+          sellingPrice: Number(p.sellingPrice) || 0,
+          discount: Number(p.discount) || 0,
+          taxRate: Number(p.taxRate) || 12,
+          currentStock: Number(p.currentStock) || 0,
+          minimumStock: Number(p.minimumStock) || 10
+        })));
+      }
+      if (Array.isArray(custData)) {
+        setCustomers(custData.map(c => ({
+          ...c,
+          totalBilled: Number(c.totalBilled) || 0,
+          totalBills: Number(c.totalBills) || 0,
+          creditBalance: Number(c.creditBalance) || 0
+        })));
+      }
+      if (Array.isArray(suppData)) {
+        setSuppliers(suppData.map(s => ({
+          ...s,
+          balance: Number(s.balance) || 0,
+          totalPurchases: Number(s.totalPurchases) || 0
+        })));
+      }
+      if (Array.isArray(salesData)) {
+        setSales(salesData);
+      }
+      if (Array.isArray(purData)) {
+        setPurchases(purData);
+      }
+      if (Array.isArray(retData)) {
+        setReturns(retData);
+      }
+    } catch (err) {
+      console.error('Failed to sync with TiDB database:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshAllData();
+  }, [refreshAllData]);
+
   useEffect(() => {
     localStorage.setItem('svc_user', JSON.stringify(currentUser));
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('svc_shop', JSON.stringify(shop));
-  }, [shop]);
+    localStorage.setItem('svc_active_tab', activeTab);
+  }, [activeTab]);
 
-  useEffect(() => {
-    localStorage.setItem('svc_products', JSON.stringify(products));
-  }, [products]);
+  // Category Actions
+  const addCategory = async (categoryName) => {
+    if (!categoryName || !categoryName.trim()) return;
+    const trimmed = categoryName.trim();
+    if (categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      showToast('Category already exists!', 'warning');
+      return;
+    }
+    const newCat = {
+      id: `cat_${Date.now()}`,
+      name: trimmed
+    };
+    try {
+      await api.addCategory(newCat);
+      setCategories((prev) => [...prev, newCat]);
+      showToast(`Category "${trimmed}" saved to Database!`, 'success');
+    } catch (e) {
+      showToast('Error saving category: ' + e.message, 'error');
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('svc_customers', JSON.stringify(customers));
-  }, [customers]);
+  const deleteCategory = async (categoryIdOrName) => {
+    const catToDelete = categories.find((c) => c.id === categoryIdOrName || c.name === categoryIdOrName);
+    if (!catToDelete) return;
+    if (window.confirm(`Delete category "${catToDelete.name}"?`)) {
+      try {
+        await api.deleteCategory(catToDelete.id);
+        setCategories((prev) => prev.filter((c) => c.id !== catToDelete.id && c.name !== catToDelete.name));
+        showToast(`Category "${catToDelete.name}" deleted from Database!`, 'info');
+      } catch (e) {
+        showToast('Error deleting category: ' + e.message, 'error');
+      }
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('svc_suppliers', JSON.stringify(suppliers));
-  }, [suppliers]);
-
-  useEffect(() => {
-    localStorage.setItem('svc_sales', JSON.stringify(sales));
-  }, [sales]);
-
-  useEffect(() => {
-    localStorage.setItem('svc_purchases', JSON.stringify(purchases));
-  }, [purchases]);
-
-  useEffect(() => {
-    localStorage.setItem('svc_returns', JSON.stringify(returns));
-  }, [returns]);
-
-  // Actions
+  // Switch role
   const switchRole = (role) => {
     if (role === 'admin') {
       setCurrentUser({ role: 'admin', name: 'Shop Owner (Admin)' });
@@ -145,7 +189,6 @@ export const AppProvider = ({ children }) => {
     } else {
       setCurrentUser({ role: 'cashier', name: 'Cashier Staff' });
       showToast('Switched to Cashier Staff Mode (Restricted view)', 'info');
-      // If currently on admin-only tabs, redirect to billing
       if (['reports', 'settings'].includes(activeTab)) {
         setActiveTab('billing');
       }
@@ -153,7 +196,7 @@ export const AppProvider = ({ children }) => {
   };
 
   // Save new bill
-  const saveBill = (billData, printAfterSave = false) => {
+  const saveBill = async (billData, printAfterSave = false) => {
     const invoiceNo = `${shop.invoicePrefix || 'INV-'}${shop.nextInvoiceNum || 1001}`;
     
     const newSale = {
@@ -164,72 +207,24 @@ export const AppProvider = ({ children }) => {
       createdBy: currentUser.role === 'admin' ? 'Admin' : 'Cashier'
     };
 
-    // 1. Deduct Stock automatically
-    setProducts((prevProducts) =>
-      prevProducts.map((p) => {
-        const lineItem = newSale.items.find((item) => item.id === p.id);
-        if (lineItem) {
-          const newStock = Math.max(0, p.currentStock - lineItem.qty);
-          return { ...p, currentStock: newStock };
-        }
-        return p;
-      })
-    );
-
-    // 2. Add or update customer
-    if (newSale.customerMobile) {
-      setCustomers((prevCustomers) => {
-        const existingIdx = prevCustomers.findIndex((c) => c.mobile === newSale.customerMobile);
-        if (existingIdx >= 0) {
-          const updated = [...prevCustomers];
-          updated[existingIdx] = {
-            ...updated[existingIdx],
-            name: newSale.customerName || updated[existingIdx].name,
-            address: newSale.customerAddress || updated[existingIdx].address,
-            gstin: newSale.customerGstin || updated[existingIdx].gstin || '',
-            totalBilled: (updated[existingIdx].totalBilled || 0) + newSale.grandTotal,
-            totalBills: (updated[existingIdx].totalBills || 0) + 1
-          };
-          return updated;
-        } else {
-          return [
-            ...prevCustomers,
-            {
-              id: `CUST-${Date.now().toString().slice(-4)}`,
-              name: newSale.customerName || 'Walk-in Customer',
-              mobile: newSale.customerMobile,
-              address: newSale.customerAddress || '',
-              gstin: newSale.customerGstin || '',
-              totalBilled: newSale.grandTotal,
-              totalBills: 1,
-              creditBalance: 0
-            }
-          ];
-        }
-      });
-    }
-
-    // 3. Save sale
-    setSales((prev) => [newSale, ...prev]);
-
-    // 4. Increment invoice number in shop
-    setShop((prev) => ({
-      ...prev,
-      nextInvoiceNum: (prev.nextInvoiceNum || 1001) + 1
-    }));
-
-    showToast(`Bill #${invoiceNo} saved successfully! 🎉`, 'success');
-
     if (printAfterSave) {
-      setActiveInvoiceForPrint(newSale);
+      setActiveInvoiceForPrint({ ...newSale, autoPrint: true });
       setIsPrintModalOpen(true);
     }
 
-    return newSale;
+    try {
+      await api.saveSale(newSale);
+      showToast(`Bill #${invoiceNo} saved to TiDB Database!`, 'success');
+      refreshAllData();
+      return newSale;
+    } catch (e) {
+      showToast('Database error saving bill: ' + e.message, 'error');
+      return null;
+    }
   };
 
   // Process Sales Return
-  const processReturn = (returnData) => {
+  const processReturn = async (returnData) => {
     const returnId = `RET-${Date.now().toString().slice(-4)}`;
     const newReturn = {
       ...returnData,
@@ -238,27 +233,19 @@ export const AppProvider = ({ children }) => {
       createdBy: currentUser.role === 'admin' ? 'Admin' : 'Cashier'
     };
 
-    // Increase stock for returned items
-    setProducts((prev) =>
-      prev.map((prod) => {
-        const ret = newReturn.returnedItems.find((r) => r.id === prod.id);
-        if (ret) {
-          return {
-            ...prod,
-            currentStock: prod.currentStock + Number(ret.qty)
-          };
-        }
-        return prod;
-      })
-    );
-
-    setReturns((prev) => [newReturn, ...prev]);
-    showToast(`Sales return #${returnId} processed. Stock replenished! ↩️`, 'success');
-    return newReturn;
+    try {
+      await api.saveReturn(newReturn);
+      showToast(`Sales return #${returnId} saved! Stock replenished in DB.`, 'success');
+      await refreshAllData();
+      return newReturn;
+    } catch (e) {
+      showToast('Database error processing return: ' + e.message, 'error');
+      return null;
+    }
   };
 
   // Add Product
-  const addProduct = (productData) => {
+  const addProduct = async (productData) => {
     const newProd = {
       ...productData,
       id: productData.code || `PRD-${Date.now().toString().slice(-4)}`,
@@ -270,38 +257,58 @@ export const AppProvider = ({ children }) => {
       minimumStock: Number(productData.minimumStock) || 10,
       status: productData.status || 'Active'
     };
-    setProducts((prev) => [newProd, ...prev]);
-    showToast(`Product "${newProd.name}" added successfully! 🧨`, 'success');
+
+    try {
+      await api.addProduct(newProd);
+      showToast(`Product "${newProd.name}" saved to TiDB Database!`, 'success');
+      await refreshAllData();
+    } catch (e) {
+      showToast('Database error adding product: ' + e.message, 'error');
+    }
   };
 
   // Update Product
-  const updateProduct = (updatedProduct) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
-    showToast(`Product "${updatedProduct.name}" updated!`, 'success');
+  const updateProduct = async (updatedProduct) => {
+    try {
+      await api.updateProduct(updatedProduct.id, updatedProduct);
+      showToast(`Product "${updatedProduct.name}" updated in Database!`, 'success');
+      await refreshAllData();
+    } catch (e) {
+      showToast('Database error updating product: ' + e.message, 'error');
+    }
   };
 
   // Delete Product
-  const deleteProduct = (id) => {
+  const deleteProduct = async (id) => {
     if (currentUser.role !== 'admin') {
       showToast('Only Admin can delete products!', 'error');
       return;
     }
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    showToast('Product deleted from inventory', 'info');
+    try {
+      await api.deleteProduct(id);
+      showToast('Product deleted from Database!', 'info');
+      await refreshAllData();
+    } catch (e) {
+      showToast('Database error deleting product: ' + e.message, 'error');
+    }
   };
 
   // Quick adjust stock
-  const quickAdjustStock = (productId, newStock) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, currentStock: Math.max(0, Number(newStock)) } : p))
-    );
-    showToast('Stock count adjusted', 'success');
+  const quickAdjustStock = async (productId, newStock) => {
+    const target = products.find(p => p.id === productId);
+    if (!target) return;
+    const updated = { ...target, currentStock: Math.max(0, Number(newStock)) };
+    try {
+      await api.updateProduct(productId, updated);
+      showToast('Stock updated in Database!', 'success');
+      await refreshAllData();
+    } catch (e) {
+      showToast('Error updating stock: ' + e.message, 'error');
+    }
   };
 
   // Add Purchase Entry (Inward stock)
-  const addPurchase = (purchaseData) => {
+  const addPurchase = async (purchaseData) => {
     const purchaseId = `PUR-${Date.now().toString().slice(-4)}`;
     const newPur = {
       ...purchaseData,
@@ -309,67 +316,69 @@ export const AppProvider = ({ children }) => {
       date: new Date().toISOString()
     };
 
-    // Increment stock for each purchased item
-    setProducts((prev) =>
-      prev.map((prod) => {
-        const inward = newPur.items.find((item) => item.productId === prod.id);
-        if (inward) {
-          return {
-            ...prod,
-            currentStock: prod.currentStock + Number(inward.qty),
-            purchasePrice: inward.rate ? Number(inward.rate) : prod.purchasePrice
-          };
-        }
-        return prod;
-      })
-    );
-
-    setPurchases((prev) => [newPur, ...prev]);
-    showToast(`Purchase inward saved & stock added! 📦`, 'success');
+    try {
+      await api.savePurchase(newPur);
+      showToast(`Stock inward saved to TiDB Database!`, 'success');
+      await refreshAllData();
+    } catch (e) {
+      showToast('Error saving purchase inward: ' + e.message, 'error');
+    }
   };
 
   // Add / Update Supplier
-  const addSupplier = (suppData) => {
-    if (suppData.id) {
-      setSuppliers((prev) => prev.map((s) => (s.id === suppData.id ? suppData : s)));
-      showToast('Supplier updated', 'success');
-    } else {
-      const newSup = {
-        ...suppData,
-        id: `SUP-${Date.now().toString().slice(-4)}`,
-        balance: Number(suppData.balance) || 0,
-        totalPurchases: 0
-      };
-      setSuppliers((prev) => [...prev, newSup]);
-      showToast('New supplier registered', 'success');
+  const addSupplier = async (suppData) => {
+    const sId = suppData.id || `SUP-${Date.now().toString().slice(-4)}`;
+    const supplier = {
+      ...suppData,
+      id: sId,
+      balance: Number(suppData.balance) || 0,
+      totalPurchases: Number(suppData.totalPurchases) || 0
+    };
+    try {
+      await api.addSupplier(supplier);
+      showToast('Supplier saved to Database!', 'success');
+      await refreshAllData();
+    } catch (e) {
+      showToast('Error saving supplier: ' + e.message, 'error');
     }
   };
 
   // Add / Update Customer
-  const addCustomer = (custData) => {
-    if (custData.id) {
-      setCustomers((prev) => prev.map((c) => (c.id === custData.id ? custData : c)));
-      showToast('Customer details updated', 'success');
-    } else {
-      const newCust = {
-        ...custData,
-        id: `CUST-${Date.now().toString().slice(-4)}`,
-        totalBilled: 0,
-        totalBills: 0,
-        creditBalance: Number(custData.creditBalance) || 0
-      };
-      setCustomers((prev) => [...prev, newCust]);
-      showToast('Customer created', 'success');
+  const addCustomer = async (custData) => {
+    const cId = custData.id || `CUST-${Date.now().toString().slice(-4)}`;
+    const customer = {
+      ...custData,
+      id: cId,
+      totalBilled: Number(custData.totalBilled) || 0,
+      totalBills: Number(custData.totalBills) || 0,
+      creditBalance: Number(custData.creditBalance) || 0
+    };
+    try {
+      if (custData.id) {
+        await api.updateCustomer(cId, customer);
+        showToast('Customer details updated in Database!', 'success');
+      } else {
+        await api.addCustomer(customer);
+        showToast('Customer created in Database!', 'success');
+      }
+      await refreshAllData();
+    } catch (e) {
+      showToast('Error saving customer: ' + e.message, 'error');
     }
   };
 
   // Update Shop Profile
-  const updateShop = (newDetails) => {
-    setShop(newDetails);
-    showToast('Shop and Invoice settings saved! 🏪', 'success');
+  const updateShop = async (newDetails) => {
+    try {
+      await api.saveShop(newDetails);
+      setShop(newDetails);
+      showToast('Shop and Invoice settings saved to TiDB Database!', 'success');
+    } catch (e) {
+      showToast('Error saving shop settings: ' + e.message, 'error');
+    }
   };
 
-  // Backup data export
+  // Export Data
   const exportData = () => {
     const backup = {
       version: '1.0',
@@ -385,53 +394,66 @@ export const AppProvider = ({ children }) => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Sri_Vinayaga_Crackers_Backup_${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute("download", `Gugan_Crackers_Backup_${new Date().toISOString().slice(0, 10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    showToast('Complete shop backup downloaded! 💾', 'success');
+    showToast('Complete shop backup downloaded!', 'success');
   };
 
-  // Restore data import
-  const importData = (importedJson) => {
+  // Import Data
+  const importData = async (importedJson) => {
     try {
-      if (importedJson.shop) setShop(importedJson.shop);
-      if (importedJson.products) setProducts(importedJson.products);
-      if (importedJson.customers) setCustomers(importedJson.customers);
-      if (importedJson.suppliers) setSuppliers(importedJson.suppliers);
-      if (importedJson.sales) setSales(importedJson.sales);
-      if (importedJson.purchases) setPurchases(importedJson.purchases);
-      if (importedJson.returns) setReturns(importedJson.returns);
-      showToast('Data restored successfully! 🔄', 'success');
+      if (importedJson.shop) await api.saveShop(importedJson.shop);
+      if (Array.isArray(importedJson.products)) {
+        for (const p of importedJson.products) await api.addProduct(p);
+      }
+      if (Array.isArray(importedJson.customers)) {
+        for (const c of importedJson.customers) await api.addCustomer(c);
+      }
+      if (Array.isArray(importedJson.suppliers)) {
+        for (const s of importedJson.suppliers) await api.addSupplier(s);
+      }
+      await refreshAllData();
+      showToast('Data imported and synced with Database!', 'success');
     } catch (e) {
-      showToast('Invalid backup JSON file!', 'error');
+      showToast('Error importing data: ' + e.message, 'error');
     }
   };
 
-  // Wipe all data - 100% Clean Slate
-  const wipeAllData = () => {
-    if (window.confirm('Delete all data completely? This will clear all products, customers, suppliers, and bills so you can enter your real data.')) {
-      setProducts([]);
-      setCustomers([]);
-      setSuppliers([]);
-      setSales([]);
-      setPurchases([]);
-      setReturns([]);
-      setShop(INITIAL_SHOP);
-      localStorage.removeItem('svc_products');
-      localStorage.removeItem('svc_customers');
-      localStorage.removeItem('svc_suppliers');
-      localStorage.removeItem('svc_sales');
-      localStorage.removeItem('svc_purchases');
-      localStorage.removeItem('svc_returns');
-      localStorage.setItem('svc_data_version', DATA_VERSION);
-      showToast('All records cleared! Ready for your real data.', 'info');
+  // Wipe All Data
+  const wipeAllData = async () => {
+    if (window.confirm('Delete all products, customers, sales, and database records completely?')) {
+      try {
+        await api.wipeAllData();
+        setProducts([]);
+        setCustomers([]);
+        setSuppliers([]);
+        setSales([]);
+        setPurchases([]);
+        setReturns([]);
+        setShop(prev => ({ ...prev, nextInvoiceNum: 1, nextOrderNum: 1 }));
+        showToast('All database records cleared and Invoice numbering reset to INV-1!', 'info');
+        await refreshAllData();
+      } catch (e) {
+        showToast('Error clearing database records: ' + e.message, 'error');
+      }
     }
+  };
+
+  // Mobile Drawer State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const handleSetActiveTab = (tabId) => {
+    setActiveTab(tabId);
+    setIsMobileMenuOpen(false);
   };
 
   // Trigger print bill
-  const triggerPrintBill = (invoice) => {
-    setActiveInvoiceForPrint(invoice);
+  const triggerPrintBill = (invoice, autoPrint = true) => {
+    setActiveInvoiceForPrint({ ...invoice, autoPrint });
     setIsPrintModalOpen(true);
   };
 
@@ -440,6 +462,9 @@ export const AppProvider = ({ children }) => {
       value={{
         currentUser,
         switchRole,
+        isLoading,
+        dbConnected,
+        refreshAllData,
         shop,
         updateShop,
         products,
@@ -447,7 +472,9 @@ export const AppProvider = ({ children }) => {
         updateProduct,
         deleteProduct,
         quickAdjustStock,
-        categories: CATEGORIES,
+        categories,
+        addCategory,
+        deleteCategory,
         customers,
         addCustomer,
         suppliers,
@@ -459,7 +486,7 @@ export const AppProvider = ({ children }) => {
         returns,
         processReturn,
         activeTab,
-        setActiveTab,
+        setActiveTab: handleSetActiveTab,
         activeInvoiceForPrint,
         isPrintModalOpen,
         setIsPrintModalOpen,
@@ -469,7 +496,11 @@ export const AppProvider = ({ children }) => {
         wipeAllData,
         resetData: wipeAllData,
         toast,
-        showToast
+        showToast,
+        isMobileMenuOpen,
+        setIsMobileMenuOpen,
+        toggleMobileMenu,
+        closeMobileMenu
       }}
     >
       {children}

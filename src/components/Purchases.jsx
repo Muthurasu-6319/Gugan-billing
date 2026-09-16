@@ -90,7 +90,7 @@ export const Purchases = () => {
       }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📥 Purchase Entry &amp; Stock Inward (கொள்முதல்)</span>
+            <span>Purchase Entry &amp; Stock Inward</span>
             <span className="badge badge-primary">{purchases.length} Inwards</span>
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
@@ -100,7 +100,7 @@ export const Purchases = () => {
 
         <button onClick={handleOpenAdd} className="btn btn-primary" style={{ gap: '0.5rem', fontWeight: 700 }}>
           <Plus size={18} />
-          <span>New Stock Entry (புதிய கொள்முதல்)</span>
+          <span>New Stock Entry</span>
         </button>
       </div>
 
@@ -170,7 +170,7 @@ export const Purchases = () => {
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 {/* Supplier */}
                 <div>
-                  <label className="input-label">Supplier (சப்ளையர்)</label>
+                  <label className="input-label">Supplier</label>
                   <select
                     className="select"
                     value={supplierId}

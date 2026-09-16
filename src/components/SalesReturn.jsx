@@ -94,7 +94,7 @@ export const SalesReturn = () => {
       {/* Header */}
       <div>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>↩️ Sales Return &amp; Stock Restock (விற்பனை திரும்பப்பெறுதல்)</span>
+          <span>↩️ Sales Return &amp; Stock Restock</span>
         </h2>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
           Search original bill, select returned crackers, calculate refund, and restock inventory automatically.
@@ -105,7 +105,7 @@ export const SalesReturn = () => {
       <div className="card" style={{ padding: '1.25rem' }}>
         <form onSubmit={handleLookupBill} style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '260px' }}>
-            <label className="input-label">Enter Original Invoice Number (பில் எண்)</label>
+            <label className="input-label">Enter Original Invoice Number</label>
             <div style={{ position: 'relative' }}>
               <Receipt size={16} color="var(--primary)" style={{ position: 'absolute', left: '10px', top: '10px' }} />
               <input
@@ -192,7 +192,7 @@ export const SalesReturn = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem', alignItems: 'flex-start' }}>
               <div>
-                <label className="input-label">Reason for Return (காரணம்)</label>
+                <label className="input-label">Reason for Return</label>
                 <input
                   type="text"
                   className="input"

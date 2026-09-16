@@ -23,7 +23,7 @@ export const PriceList = () => {
       }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📋 Crackers Price List (பட்டாசு விலைப்பட்டியல்)</span>
+            <span>Crackers Price List</span>
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
             Customer-facing price chart with special festive discounts and net rates.
@@ -119,7 +119,6 @@ export const PriceList = () => {
                   marginBottom: '0.5rem'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                    <span>{cat.icon}</span>
                     <span>{cat.name}</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>({cat.tamilName})</span>
                   </div>

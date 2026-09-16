@@ -69,7 +69,7 @@ export const Stock = () => {
       }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📦 Stock Inventory &amp; Low Stock Alerts</span>
+            <span>Stock Inventory &amp; Low Stock Alerts</span>
             {lowStockProducts.length + outOfStockProducts.length > 0 && (
               <span className="badge badge-danger">
                 {lowStockProducts.length + outOfStockProducts.length} Attention Needed
@@ -218,11 +218,11 @@ export const Stock = () => {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {isOut ? (
-                        <span className="badge badge-danger">Out of Stock 🔴</span>
+                        <span className="badge badge-danger">Out of Stock</span>
                       ) : isLow ? (
-                        <span className="badge badge-warning">Low Stock ⚠️</span>
+                        <span className="badge badge-warning">Low Stock</span>
                       ) : (
-                        <span className="badge badge-success">In Stock 🟢</span>
+                        <span className="badge badge-success">In Stock</span>
                       )}
                     </td>
                     {currentUser.role === 'admin' && (
