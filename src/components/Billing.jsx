@@ -1132,14 +1132,16 @@ export const Billing = () => {
               {/* Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f2942', paddingBottom: '0.5rem', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {shop.logo ? (
-                    <img src={shop.logo} alt="Logo" style={{ maxHeight: '42px', maxWidth: '70px', objectFit: 'contain' }} />
+                  {shop.logoUrl || shop.logo ? (
+                    <img src={shop.logoUrl || shop.logo} alt="Logo" style={{ maxHeight: '42px', maxWidth: '70px', objectFit: 'contain' }} />
                   ) : (
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1e3a8a', color: '#fbbf24', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px' }}>SG</div>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1e3a8a', color: '#fbbf24', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px' }}>
+                      {(shop.name || 'SG').slice(0, 2).toUpperCase()}
+                    </div>
                   )}
                   <div>
-                    <div style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>SRI GUGAN CRAKERS</div>
-                    <div style={{ fontSize: '9px', color: '#f97316', fontWeight: '800', letterSpacing: '0.15em' }}>LIGHT UP YOUR CELEBRATIONS</div>
+                    <div style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>{shop.name || 'SRI GUGAN CRACKERS'}</div>
+                    <div style={{ fontSize: '9px', color: '#f97316', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{shop.tagline || 'LIGHT UP YOUR CELEBRATIONS'}</div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', fontSize: '11px' }}>
@@ -1268,7 +1270,7 @@ export const Billing = () => {
 
                     {/* Thank you note */}
                     <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '11px', fontStyle: 'italic', color: '#1e3a8a', fontWeight: '700' }}>
-                      Thank You! Visit Again...
+                      {shop.footerMessage || 'Thank You! Visit Again...'}
                     </div>
                   </div>
                 );

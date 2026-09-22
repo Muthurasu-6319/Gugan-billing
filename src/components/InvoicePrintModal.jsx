@@ -194,27 +194,17 @@ export const InvoicePrintModal = () => {
                         lineHeight: '1.1',
                         fontFamily: "'Outfit', 'Inter', sans-serif"
                       }}>
-                        SRI GUGAN
+                        {shop.name || 'SRI GUGAN CRACKERS'}
                       </div>
                       <div style={{
-                        fontSize: '16px',
+                        fontSize: '10.5px',
                         fontWeight: '800',
                         color: '#f97316',
-                        letterSpacing: '0.25em',
-                        lineHeight: '1.1',
-                        marginTop: '1px'
-                      }}>
-                        CRAKERS
-                      </div>
-                      <div style={{
-                        fontSize: '8.5px',
-                        fontWeight: '700',
-                        color: '#1e3a8a',
-                        letterSpacing: '0.18em',
+                        letterSpacing: '0.15em',
                         textTransform: 'uppercase',
                         marginTop: '3px'
                       }}>
-                        LIGHT UP YOUR CELEBRATIONS
+                        {shop.tagline || 'LIGHT UP YOUR CELEBRATIONS'}
                       </div>
                     </div>
                   </div>
@@ -545,7 +535,7 @@ export const InvoicePrintModal = () => {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MapPin size={14} color="#f97316" />
-                  <span>Sri Gugan Crakers &nbsp;|&nbsp; Light Up Your Celebrations</span>
+                  <span>{shop.name || 'Sri Gugan Crackers'} &nbsp;|&nbsp; {shop.tagline || 'Light Up Your Celebrations'}</span>
                 </div>
                 {/* Decorative fireworks element */}
                 <div style={{ opacity: 0.8 }}>
