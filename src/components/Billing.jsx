@@ -1142,6 +1142,11 @@ export const Billing = () => {
                   <div>
                     <div style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>{shop.name || 'SRI GUGAN CRACKERS'}</div>
                     <div style={{ fontSize: '9px', color: '#f97316', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{shop.tagline || 'LIGHT UP YOUR CELEBRATIONS'}</div>
+                    <div style={{ fontSize: '8.5px', color: '#475569', marginTop: '2px', fontWeight: '600' }}>
+                      {[shop.address, shop.city, shop.pincode ? `- ${shop.pincode}` : ''].filter(Boolean).join(', ')}
+                      {shop.mobile ? ` • Ph: +91 ${shop.mobile}` : ''}
+                      {shop.email ? ` • ${shop.email}` : ''}
+                    </div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', fontSize: '11px' }}>

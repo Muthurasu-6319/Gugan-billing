@@ -206,6 +206,18 @@ export const InvoicePrintModal = () => {
                       }}>
                         {shop.tagline || 'LIGHT UP YOUR CELEBRATIONS'}
                       </div>
+
+                      {/* Shop Address & Contact Details */}
+                      <div style={{ fontSize: '10px', color: '#334155', marginTop: '6px', lineHeight: '1.4', fontWeight: '500' }}>
+                        <div>
+                          <strong>Address:</strong> {[shop.address, shop.city, shop.pincode ? `- ${shop.pincode}` : '', shop.district ? `${shop.district} Dist` : '', shop.state].filter(Boolean).join(', ')}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
+                          <span><strong>Ph:</strong> +91 {shopPhone}{shopAltPhone && shopAltPhone !== shopPhone ? ` / ${shopAltPhone}` : ''}</span>
+                          {shopEmail && <span>| <strong>Email:</strong> {shopEmail}</span>}
+                          {shopGstin && <span>| <strong>GSTIN:</strong> {shopGstin}</span>}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -535,12 +547,13 @@ export const InvoicePrintModal = () => {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MapPin size={14} color="#f97316" />
-                  <span>{shop.name || 'Sri Gugan Crackers'} &nbsp;|&nbsp; {shop.tagline || 'Light Up Your Celebrations'}</span>
+                  <span>{shop.name || 'Sri Gugan Crackers'} &nbsp;|&nbsp; {[shop.address, shop.city].filter(Boolean).join(', ')} &nbsp;|&nbsp; Ph: +91 {shopPhone}</span>
                 </div>
-                {/* Decorative fireworks element */}
-                <div style={{ opacity: 0.8 }}>
-                  <Sparkles size={16} color="#fbbf24" />
-                </div>
+                {shopEmail && (
+                  <div style={{ opacity: 0.9, fontSize: '10.5px' }}>
+                    Email: {shopEmail}
+                  </div>
+                )}
               </div>
             </div>
           ) : printFormat === 'performa' ? (
