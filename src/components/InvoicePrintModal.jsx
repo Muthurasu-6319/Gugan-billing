@@ -103,6 +103,7 @@ export const InvoicePrintModal = () => {
   const shopPhone = shop.mobile || '94431 23456';
   const shopAltPhone = shop.altMobile || '98421 23456';
   const shopEmail = shop.email || 'billing@fireworks.com';
+  const shopWebsite = shop.website || '';
   const shopGstin = shop.gstin || '33AAAAA0000A1Z5';
 
   return (
@@ -215,6 +216,7 @@ export const InvoicePrintModal = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
                           <span><strong>Ph:</strong> +91 {shopPhone}{shopAltPhone && shopAltPhone !== shopPhone ? ` / ${shopAltPhone}` : ''}</span>
                           {shopEmail && <span>| <strong>Email:</strong> {shopEmail}</span>}
+                          {shopWebsite && <span>| <strong>Web:</strong> {shopWebsite}</span>}
                           {shopGstin && <span>| <strong>GSTIN:</strong> {shopGstin}</span>}
                         </div>
                       </div>
@@ -549,11 +551,10 @@ export const InvoicePrintModal = () => {
                   <MapPin size={14} color="#f97316" />
                   <span>{shop.name || 'Sri Gugan Crackers'} &nbsp;|&nbsp; {[shop.address, shop.city].filter(Boolean).join(', ')} &nbsp;|&nbsp; Ph: +91 {shopPhone}</span>
                 </div>
-                {shopEmail && (
-                  <div style={{ opacity: 0.9, fontSize: '10.5px' }}>
-                    Email: {shopEmail}
-                  </div>
-                )}
+                <div style={{ opacity: 0.9, fontSize: '10.5px' }}>
+                  {shopWebsite ? <span>Web: {shopWebsite} &nbsp;|&nbsp; </span> : ''}
+                  {shopEmail ? `Email: ${shopEmail}` : ''}
+                </div>
               </div>
             </div>
           ) : printFormat === 'performa' ? (

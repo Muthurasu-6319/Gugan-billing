@@ -34,7 +34,8 @@ export const INITIAL_SHOP = {
   printFormat: "a4", // "a4", "performa", "thermal"
   taxInclusive: true,
   defaultTaxRate: 12,
-  upiId: "fireworks@upi"
+  upiId: "fireworks@upi",
+  website: "www.shrigugancrackers.com"
 };
 
 

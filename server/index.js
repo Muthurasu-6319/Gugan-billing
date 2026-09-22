@@ -131,8 +131,8 @@ app.post('/api/shop', async (req, res) => {
       `INSERT INTO shop (
         id, name, tagline, logo, address, city, district, state, pincode,
         mobile, altMobile, email, gstin, stateCode, invoicePrefix, nextInvoiceNum,
-        nextOrderNum, footerMessage, terms, printFormat, taxInclusive, defaultTaxRate, upiId
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        nextOrderNum, footerMessage, terms, printFormat, taxInclusive, defaultTaxRate, upiId, website
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         name=VALUES(name), tagline=VALUES(tagline), logo=VALUES(logo), address=VALUES(address),
         city=VALUES(city), district=VALUES(district), state=VALUES(state), pincode=VALUES(pincode),
@@ -140,11 +140,11 @@ app.post('/api/shop', async (req, res) => {
         stateCode=VALUES(stateCode), invoicePrefix=VALUES(invoicePrefix), nextInvoiceNum=VALUES(nextInvoiceNum),
         nextOrderNum=VALUES(nextOrderNum), footerMessage=VALUES(footerMessage), terms=VALUES(terms),
         printFormat=VALUES(printFormat), taxInclusive=VALUES(taxInclusive), defaultTaxRate=VALUES(defaultTaxRate),
-        upiId=VALUES(upiId)`,
+        upiId=VALUES(upiId), website=VALUES(website)`,
       [
         shopId, shop.name, shop.tagline, shop.logo, shop.address, shop.city, shop.district, shop.state, shop.pincode,
         shop.mobile, shop.altMobile, shop.email, shop.gstin, shop.stateCode, shop.invoicePrefix, shop.nextInvoiceNum || 1001,
-        shop.nextOrderNum || 1, shop.footerMessage, shop.terms, shop.printFormat, shop.taxInclusive ? 1 : 0, shop.defaultTaxRate || 12, shop.upiId
+        shop.nextOrderNum || 1, shop.footerMessage, shop.terms, shop.printFormat, shop.taxInclusive ? 1 : 0, shop.defaultTaxRate || 12, shop.upiId, shop.website
       ]
     );
     res.json({ success: true, shop });

@@ -1146,6 +1146,7 @@ export const Billing = () => {
                       {[shop.address, shop.city, shop.pincode ? `- ${shop.pincode}` : ''].filter(Boolean).join(', ')}
                       {shop.mobile ? ` • Ph: +91 ${shop.mobile}` : ''}
                       {shop.email ? ` • ${shop.email}` : ''}
+                      {shop.website ? ` • Web: ${shop.website}` : ''}
                     </div>
                   </div>
                 </div>

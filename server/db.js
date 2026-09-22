@@ -53,6 +53,7 @@ export async function initDb() {
         taxInclusive BOOLEAN,
         defaultTaxRate DECIMAL(5,2),
         upiId VARCHAR(100),
+        website VARCHAR(255),
         isWiped INT DEFAULT 0,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -60,6 +61,11 @@ export async function initDb() {
 
     try {
       await connection.query(`ALTER TABLE shop ADD COLUMN isWiped INT DEFAULT 0`);
+    } catch (e) {
+      // Ignore if column already exists
+    }
+    try {
+      await connection.query(`ALTER TABLE shop ADD COLUMN website VARCHAR(255) DEFAULT ''`);
     } catch (e) {
       // Ignore if column already exists
     }

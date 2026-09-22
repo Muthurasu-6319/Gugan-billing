@@ -269,6 +269,18 @@ export const Settings = () => {
             </div>
 
             <div>
+              <label className="input-label">Shop Website URL (Optional)</label>
+              <input
+                type="text"
+                name="website"
+                className="input"
+                placeholder="e.g. www.shrigugancrackers.com"
+                value={formData.website || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
               <label className="input-label">UPI ID for Payment QR (e.g. 9876543210@okaxis)</label>
               <input
                 type="text"
